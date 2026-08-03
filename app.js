@@ -2,7 +2,7 @@
 
 const express = require('express');
 const axios = require('axios');
-const cloudbase = require('@cloudbase/node-sdk');
+const { db } = require('./routes/diagnose-db');
 const { startDiagnoseWorker, stopDiagnoseWorker } = require('./routes/diagnose-worker');
 
 const app = express();
@@ -10,17 +10,7 @@ app.use(express.json());
 
 const APPID = process.env.APPID;
 const APPSECRET = process.env.APPSECRET;
-const TCB_ENV = process.env.TCB_ENV;
-const TCB_SECRET_ID = process.env.TCB_SECRET_ID;
-const TCB_SECRET_KEY = process.env.TCB_SECRET_KEY;
-
-const tcbsdk = cloudbase.init({
-  secretId: TCB_SECRET_ID,
-  secretKey: TCB_SECRET_KEY,
-  env: TCB_ENV,
-  region: 'ap-shanghai'
-});
-const db = tcbsdk.database();
+// 诊断路由、Worker与app共用diagnose-db中的同一个CloudBase实例。
 app.db = db;
 
 // 现有支付、配额和诊断路由保持由routes/index统一挂载。
