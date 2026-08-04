@@ -60,7 +60,13 @@ function errorDetails(error) {
 
 async function getTaskByDocumentId(documentId) {
   const result = await withTimeout(taskColl.doc(documentId).get(), 3000, 'DB_TASK_QUERY_TIMEOUT');
-  return result.data?.[0] || null;
+  const task = result.data?.[0];
+  if (!task) return null;
+
+  // CloudBase doc().get() does not consistently include `_id` in the returned
+  // document. The task document ID is deliberately the same as task_id, so
+  // restore it here for every ownership/update query used by the Worker.
+  return { ...task, _id: task._id || documentId };
 }
 
 async function releaseUserTask(openid, taskId) {
@@ -171,7 +177,9 @@ async function updateOwnedTask(task, workerId, update) {
 }
 
 async function finalizeSuccessfulTask(task, workerId, diagnosis) {
-  const taskDocumentId = task._id;
+  // task_id is the canonical diagnose_task document ID. Do not depend on
+  // CloudBase returning the synthetic `_id` field from doc().get().
+  const taskDocumentId = task.task_id;
   const resultDocumentId = task.task_id;
   const now = Date.now();
 
