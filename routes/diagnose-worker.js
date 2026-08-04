@@ -58,9 +58,16 @@ function errorDetails(error) {
   };
 }
 
+function firstDocument(result) {
+  const data = result?.data;
+  if (Array.isArray(data)) return data[0] || null;
+  if (data && typeof data === 'object') return data;
+  return null;
+}
+
 async function getTaskByDocumentId(documentId) {
   const result = await withTimeout(taskColl.doc(documentId).get(), 3000, 'DB_TASK_QUERY_TIMEOUT');
-  const task = result.data?.[0];
+  const task = firstDocument(result);
   if (!task) return null;
 
   // CloudBase doc().get() does not consistently include `_id` in the returned
@@ -185,8 +192,13 @@ async function finalizeSuccessfulTask(task, workerId, diagnosis) {
 
   await db.runTransaction(async transaction => {
     const transactionTaskColl = transaction.collection('diagnose_task');
-    const taskResult = await transactionTaskColl.doc(taskDocumentId).get();
-    const currentTask = taskResult.data?.[0];
+    // Query by the persisted business key inside the transaction. The task is
+    // known to exist under this task_id even on SDK versions whose transaction
+    // doc().get() result differs from ordinary document reads.
+    const taskResult = await transactionTaskColl.where({ task_id: task.task_id }).limit(1).get();
+    // CloudBase SDK versions may expose transaction read data as either a
+    // document object or an array. Accept both response shapes.
+    const currentTask = firstDocument(taskResult);
     if (!currentTask) throw new Error('TASK_NOT_FOUND');
     if (currentTask.status === 'succeeded' && currentTask.charged) return;
     if (currentTask.status !== 'running' || currentTask.worker_id !== workerId) {
@@ -195,11 +207,14 @@ async function finalizeSuccessfulTask(task, workerId, diagnosis) {
     if (currentTask.cancel_requested) throw new Error('TASK_CANCELLED');
 
     const userResult = await transaction.collection('users').where({ openid: task.openid }).limit(1).get();
-    const user = userResult.data?.[0];
+    const user = firstDocument(userResult);
     if (!user) throw new Error('USER_NOT_FOUND');
 
-    const ledgerResult = await transaction.collection('diagnose_quota_ledger').doc(task.task_id).get();
-    const existingLedger = ledgerResult.data?.[0];
+    const ledgerResult = await transaction.collection('diagnose_quota_ledger')
+      .where({ task_id: task.task_id })
+      .limit(1)
+      .get();
+    const existingLedger = firstDocument(ledgerResult);
     if (existingLedger?.charged) {
       if (user.active_diagnose_task_id === task.task_id) {
         await transaction.collection('users').doc(user._id).update({ active_diagnose_task_id: null });
