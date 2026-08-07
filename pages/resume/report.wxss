@@ -1,0 +1,167 @@
+/* 全局容器 */
+.container {
+  padding: 20rpx;
+  background-color: #f5f7fa;
+  min-height: 100vh;
+}
+
+/* 卡片通用 */
+.card {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
+}
+
+/* 卡片标题 —— 纯文字、完全居中、无图标 */
+.card-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24rpx;
+  text-align: center;
+}
+
+.card-title text {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  text-align: center;
+}
+
+/* 卡片1 概况 */
+.desc-line {
+  display: block;
+  font-size: 28rpx;
+  color: #444;
+  line-height: 44rpx;
+  margin-bottom: 12rpx;
+}
+
+/* 卡片2 优势 天蓝文字 */
+.advantage-line {
+  display: block;
+  font-size: 28rpx;
+  color: #1677ff;
+  line-height: 44rpx;
+  margin-bottom: 12rpx;
+}
+
+/* 卡片3 待提升 */
+.sub-card {
+  margin-bottom: 28rpx;
+}
+
+.sub-title {
+  font-size: 29rpx;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 16rpx;
+  text-align: left;
+}
+
+.improve-line {
+  display: block;
+  font-size: 28rpx;
+  color: #f57c00;
+  line-height: 44rpx;
+  margin-bottom: 10rpx;
+}
+
+.project-item {
+  margin-bottom: 20rpx;
+  padding-left: 10rpx;
+}
+
+.project-name {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 10rpx;
+}
+
+/* 卡片4 优化对比 */
+.compare-box {
+  margin-bottom: 30rpx;
+}
+
+.original {
+  background: #f2f3f5;
+  color: #999;
+  padding: 20rpx;
+  border-radius: 12rpx;
+  font-size: 26rpx;
+  margin-bottom: 16rpx;
+}
+
+.optimize {
+  background: #e8f3ff;
+  padding: 24rpx;
+  border-radius: 12rpx;
+}
+
+.optimize text {
+  font-size: 28rpx;
+  color: #1677ff;
+  line-height: 42rpx;
+  display: block;
+}
+
+.copy-btn {
+  margin-top: 16rpx;
+  font-size: 24rpx;
+  color: #fff;
+  background: #1677ff;
+  padding: 8rpx 20rpx;
+  border-radius: 8rpx;
+  display: inline-block;
+}
+
+.project-label {
+  font-size: 27rpx;
+  font-weight: 500;
+  color: #1677ff;
+  margin-bottom: 12rpx;
+}
+
+/* 流式生成状态 */
+.generating-indicator {
+  margin: 12rpx 0 36rpx;
+  text-align: center;
+  color: #999;
+  font-size: 24rpx;
+}
+
+.generating-dot {
+  display: inline-block;
+  margin-right: 10rpx;
+  color: #1677ff;
+  animation: generating-pulse 1s ease-in-out infinite;
+}
+
+@keyframes generating-pulse {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+/* 底部按钮 */
+.bottom-btn {
+  background: #1677ff;
+  color: #fff;
+  text-align: center;
+  font-size: 30rpx;
+  padding: 28rpx;
+  border-radius: 16rpx;
+  margin: 40rpx 0 60rpx;
+  font-weight: 500;
+  width: 100%;
+  box-sizing: border-box;
+}
