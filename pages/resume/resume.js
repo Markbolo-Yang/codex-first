@@ -127,130 +127,149 @@ Page({
   },
 
   async checkResumeQuota() {
-    const openId = await this.ensureOpenId();
-    if (!openId) {
-      wx.showToast({ title: '用户登录失败', icon: 'none' });
-      return false;
+    let openId = app.globalData.openId || wx.getStorageSync("openid")
+    if (!openId || openId === 'undefined') {
+      const authRes = await app.getWxAuth()
+      if (!authRes?.openid) {
+        wx.showToast({ title: '用户登录失败', icon: 'none' })
+        return false
+      }
+      openId = authRes.openid
     }
-    let quotaResult;
-    try {
-      const response = await this.request({
-        url: `${app.globalData.baseUrl}/api/getUserQuota`,
-        method: 'POST',
-        header: { 'Content-Type': 'application/json' },
-        data: { openId }
-      });
-      quotaResult = response.data;
-    } catch (error) {
-      console.error('查询接口异常：', error);
-      quotaResult = { code: -1 };
-    }
-    if (quotaResult.code !== 0) {
-      wx.showToast({ title: '获取次数失败', icon: 'none' });
-      return false;
-    }
-    const { resumeFreeLeft, payResumeCount } = quotaResult.data;
-    if (resumeFreeLeft > 0 || payResumeCount > 0) return true;
-    this.showPaymentModal(openId);
-    return false;
-  },
 
-  showPaymentModal(openId) {
-    wx.showModal({
-      title: '啊哈～免费简历诊断次数用完啦',
-      content: '本次诊断仅付费0.01元',
-      confirmText: '去支付',
-      cancelText: '取消',
-      success: result => {
-        if (result.confirm) this.createPayment(openId);
-      }
-    });
-  },
-
-  async createPayment(openId) {
-    let createResult;
-    try {
-      const response = await this.request({
-        url: `${app.globalData.baseUrl}/api/createWxPayOrder`,
-        method: 'POST',
-        header: { 'Content-Type': 'application/json' },
-        data: { openId, type: 'resume' }
-      });
-      createResult = response.data;
-    } catch (error) {
-      console.error('下单网络失败', error);
-      wx.showToast({ title: '创建订单失败', icon: 'none' });
-      return;
+    const quotaRes = await new Promise(resolve => {
+      wx.request({
+        url: `https://api.youwantoffer.cn/api/getUserQuota`,
+        method: "POST",
+        header: { "Content-Type": "application/json" },
+        data: { openId },
+        success: res => resolve(res.data),
+        fail: (err) => {
+          console.error('查询接口异常：', err)
+          resolve({ code: -1 })
+        }
+      })
+    })
+    if (quotaRes.code !== 0) {
+      wx.showToast({ title: "获取次数失败", icon: "none" })
+      return false
     }
-    if (createResult.errcode !== 0 || !createResult.prepay_id || !createResult.payParams) {
-      console.error('下单失败详情', createResult);
-      wx.showToast({ title: createResult.wxMessage || '创建订单失败', icon: 'none' });
-      return;
-    }
-    wx.requestPayment({
-      ...createResult.payParams,
-      success: () => this.pollPaidOrder(createResult),
-      fail: error => {
-        console.error('支付弹窗取消/失败', error);
-        wx.showToast({ title: '支付取消或失败', icon: 'none' });
-      }
-    });
-  },
+    const { resumeFreeLeft, payResumeCount } = quotaRes.data
+    if (resumeFreeLeft > 0 || payResumeCount > 0) {
+      return true
+    } else {
+      wx.showModal({
+        title: "啊哈～免费简历诊断次数用完啦",
+        content: "本次诊断仅付费0.01元",
+        confirmText: "去支付",
+        cancelText: "取消",
+        success: async (res) => {
+          if (res.confirm) {
+            const createRes = await new Promise(resolve => {
+              wx.request({
+                url: "https://api.youwantoffer.cn/api/createWxPayOrder",
+                method: "POST",
+                header: { "Content-Type": "application/json" },
+                data: { openId, type: "resume" },
+                success: r => resolve(r.data),
+                fail: (err) => {
+                  console.error("下单网络失败", err)
+                  resolve({ errcode: -1 })
+                }
+              })
+            })
 
-  pollPaidOrder(createResult) {
-    wx.showLoading({ title: '从聊天选取简历即可' });
-    this.pollCount = 0;
-    this.setData({ isPolling: true });
-    this._pollTimer = setInterval(async () => {
-      if (!this._pollTimer) return;
-      this.pollCount += 1;
-      let orderResult = { errcode: -1 };
-      try {
-        const response = await this.request({
-          url: `${app.globalData.baseUrl}/api/queryPayOrder`,
-          method: 'POST',
-          header: { 'Content-Type': 'application/json' },
-          data: { out_trade_no: createResult.out_trade_no }
-        });
-        orderResult = response.data;
-      } catch (error) {
-        console.error('订单查询失败', error);
-      }
-      if (!this._pollTimer) return;
-      if (orderResult.errcode === 0 && orderResult.trade_state === 'SUCCESS') {
-        this.clearOrderPolling();
-        wx.hideLoading();
-        wx.showToast({ title: '支付成功', icon: 'success' });
-        this.openFile();
-      } else if (this.pollCount >= 5) {
-        this.clearOrderPolling();
-        wx.hideLoading();
-        wx.showToast({ title: '订单同步中，请稍后重试', icon: 'none', duration: 3000 });
-      }
-    }, 2200);
+            if (createRes.errcode !== 0 || !createRes.prepay_id || !createRes.payParams) {
+              console.error("下单失败详情", createRes)
+              if (createRes.wxCode && createRes.wxMessage) {
+                wx.showToast({ title: `错误：${createRes.wxMessage}`, icon: "none", duration: 2500 })
+              } else {
+                wx.showToast({ title: "创建订单失败", icon: "none" })
+              }
+              return
+            }
+
+            const payParams = createRes.payParams
+            wx.requestPayment({
+              ...payParams,
+              success: () => {
+                wx.showLoading({ title: "从聊天选取简历即可" });
+                this.pollCount = 0;
+                const maxPoll = 5;
+                const pollTimer = setInterval(async () => {
+                  if (!this._pollTimer) return;
+                  this.pollCount++;
+                  const orderRes = await new Promise(resolve => {
+                    wx.request({
+                      url: "https://api.youwantoffer.cn/api/queryPayOrder",
+                      method: "POST",
+                      header: { "Content-Type": "application/json" },
+                      data: { out_trade_no: createRes.out_trade_no },
+                      success: r => resolve(r.data),
+                      fail: () => resolve({ errcode: -1 })
+                    });
+                  });
+                  if (!this._pollTimer) return;
+
+                  if (orderRes.errcode === 0 && orderRes.trade_state === "SUCCESS") {
+                    clearInterval(pollTimer);
+                    this._pollTimer = null;
+                    wx.hideLoading();
+                    wx.showToast({ title: "支付成功", icon: "success" });
+                    this.openFile();
+                    this.setData({ isPolling: false });
+                    return;
+                  }
+
+                  if (this.pollCount >= maxPoll) {
+                    clearInterval(pollTimer);
+                    this._pollTimer = null;
+                    wx.hideLoading();
+                    this.setData({ isPolling: false });
+                    wx.showToast({
+                      title: "订单同步中，请稍后重试",
+                      icon: "none",
+                      duration: 3000
+                    });
+                  }
+                }, 2200);
+                this._pollTimer = pollTimer;
+                this.setData({ isPolling: true });
+              },
+              fail: (payErr) => {
+                console.error("支付弹窗取消/失败", payErr)
+                wx.showToast({ title: "支付取消或失败", icon: "none" })
+              }
+            })
+          }
+        }
+      })
+      return false
+    }
   },
 
   uploadResume() {
-    if (this.data.isPolling || this.data.isSubmitting) {
-      wx.showToast({ title: '当前操作正在处理中，请稍候', icon: 'none' });
+    if (this.data.isPolling) {
+      wx.showToast({ title: "正在同步订单，请稍候", icon: "none" })
       return;
     }
-    const tipCount = wx.getStorageSync('tip') || 0;
-    if (tipCount < 2) {
+    let count = wx.getStorageSync('tip') || 0
+    if (count < 2) {
       wx.showModal({
         title: '上传提示',
         content: '从聊天选取简历即可',
         showCancel: false,
         success: async () => {
-          wx.setStorageSync('tip', tipCount + 1);
-          if (await this.checkResumeQuota()) this.openFile();
+          wx.setStorageSync('tip', count + 1)
+          const ok = await this.checkResumeQuota()
+          if (ok) this.openFile()
         }
-      });
-      return;
+      })
+    } else {
+      this.checkResumeQuota().then(ok => {
+        if (ok) this.openFile()
+      })
     }
-    this.checkResumeQuota().then(canUse => {
-      if (canUse) this.openFile();
-    });
   },
 
   openFile() {

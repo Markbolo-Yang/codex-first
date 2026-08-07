@@ -29,12 +29,42 @@
       <view class="refresh-btn" bindtap="onRefreshSample"><text class="refresh-icon">⟳</text></view>
     </view>
     <view class="grid-row">
-      <view class="grid-item" wx:for="{{resumeList}}" wx:key="_id" bindtap="goToDetail" data-id="{{item._id}}">
-        <image class="corner-mark" src="{{item.fileType === 'word' ? '/images/icon-word-light.png' : '/images/icon-pdf-light.png'}}"></image>
+      <view class="grid-item" wx:if="{{resumeList.length > 0}}" bindtap="goToDetail" data-id="{{resumeList[0]._id}}">
+        <image class="corner-mark" src="{{resumeList[0].fileType === 'word' ? '/images/icon-word-light.png' : '/images/icon-pdf-light.png'}}"></image>
         <view class="item-content">
-          <view class="line1">{{item.title}}</view>
-          <view class="line2">{{item.eduTag || '985/海外院校'}}</view>
+          <view class="line1">{{resumeList[0].title}}</view>
+          <view class="line2">{{resumeList[0].eduTag || '985/海外院校'}}</view>
         </view>
+      </view>
+      <view class="grid-item" wx:else>
+        <image class="corner-mark" src="/images/icon-pdf-light.png"></image>
+        <view class="item-content"><view class="line1">David 产品经理CV</view><view class="line2">英硕</view></view>
+      </view>
+      <view class="grid-item" wx:if="{{resumeList.length > 1}}" bindtap="goToDetail" data-id="{{resumeList[1]._id}}">
+        <image class="corner-mark" src="{{resumeList[1].fileType === 'word' ? '/images/icon-word-light.png' : '/images/icon-pdf-light.png'}}"></image>
+        <view class="item-content"><view class="line1">{{resumeList[1].title}}</view><view class="line2">{{resumeList[1].eduTag || '985/海外院校'}}</view></view>
+      </view>
+      <view class="grid-item" wx:else>
+        <image class="corner-mark" src="/images/icon-word-light.png"></image>
+        <view class="item-content"><view class="line1">马同学-运营简历</view><view class="line2">国内985</view></view>
+      </view>
+    </view>
+    <view class="grid-row">
+      <view class="grid-item" wx:if="{{resumeList.length > 2}}" bindtap="goToDetail" data-id="{{resumeList[2]._id}}">
+        <image class="corner-mark" src="{{resumeList[2].fileType === 'word' ? '/images/icon-word-light.png' : '/images/icon-pdf-light.png'}}"></image>
+        <view class="item-content"><view class="line1">{{resumeList[2].title}}</view><view class="line2">{{resumeList[2].eduTag || '985/海外院校'}}</view></view>
+      </view>
+      <view class="grid-item" wx:else>
+        <image class="corner-mark" src="/images/icon-pdf-light.png"></image>
+        <view class="item-content"><view class="line1">Tina Gui-Data scientist</view><view class="line2">美本</view></view>
+      </view>
+      <view class="grid-item" wx:if="{{resumeList.length > 3}}" bindtap="goToDetail" data-id="{{resumeList[3]._id}}">
+        <image class="corner-mark" src="{{resumeList[3].fileType === 'word' ? '/images/icon-word-light.png' : '/images/icon-pdf-light.png'}}"></image>
+        <view class="item-content"><view class="line1">{{resumeList[3].title}}</view><view class="line2">{{resumeList[3].eduTag || '985/海外院校'}}</view></view>
+      </view>
+      <view class="grid-item" wx:else>
+        <image class="corner-mark" src="/images/icon-word-light.png"></image>
+        <view class="item-content"><view class="line1">视觉设计简历模板</view><view class="line2">国内本科</view></view>
       </view>
     </view>
   </view>
