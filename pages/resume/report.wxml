@@ -1,0 +1,51 @@
+<view class="container">
+  <view class="card" wx:if="{{report.overview}}">
+    <view class="card-title"><text>简历概况盘点</text></view>
+    <view class="card-content"><text class="desc-line">{{report.overview}}</text></view>
+  </view>
+
+  <view class="card" wx:if="{{report.advantages.length}}">
+    <view class="card-title"><text>简历优势分析</text></view>
+    <view class="card-content">
+      <text class="advantage-line" wx:for="{{report.advantages}}" wx:for-item="advantage" wx:key="index">✅ {{advantage}}</text>
+    </view>
+  </view>
+
+  <view class="card" wx:if="{{report.improve.base_info.length || report.improve.projects.length}}">
+    <view class="card-title"><text>待提升分析</text></view>
+    <view class="sub-card" wx:if="{{report.improve.base_info.length}}">
+      <view class="sub-title">基础信息待优化</view>
+      <view class="sub-content">
+        <text class="improve-line" wx:for="{{report.improve.base_info}}" wx:for-item="point" wx:key="index">❓ {{point}}</text>
+      </view>
+    </view>
+    <view class="sub-card" wx:if="{{report.improve.projects.length}}">
+      <view class="sub-title">项目履历待优化（重点）</view>
+      <view class="project-item" wx:for="{{report.improve.projects}}" wx:for-item="project" wx:key="index">
+        <view class="project-name">{{project.project_name}}</view>
+        <text class="improve-line" wx:for="{{project.points}}" wx:for-item="point" wx:key="index">❓ {{point}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="card" wx:if="{{report.optimize_ref.length}}">
+    <view class="card-title"><text>优化方案参考</text></view>
+    <view class="sub-card">
+      <view class="compare-box" wx:for="{{report.optimize_ref}}" wx:for-item="reference" wx:key="index">
+        <view class="project-label">{{reference.project_name || '优化建议'}}</view>
+        <view class="original" wx:if="{{reference.original_text}}">原文：{{reference.original_text}}</view>
+        <view class="optimize" wx:if="{{reference.optimize_content}}">
+          <text>{{reference.optimize_content}}</text>
+          <view class="copy-btn" wx:if="{{isCompleted}}" bindtap="copyText" data-text="{{reference.optimize_content}}">一键复制</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="generating-indicator" wx:if="{{hasReportContent && !isCompleted}}">
+    <text class="generating-dot">●</text>
+    报告持续生成中...
+  </view>
+
+  <view class="bottom-btn" wx:if="{{isCompleted}}" bindtap="goToMentorTab">转向真人导师咨询</view>
+</view>
