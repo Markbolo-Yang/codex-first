@@ -1,0 +1,48 @@
+<view class="container">
+  <view class="banner">
+    <image src="/images/interview-banner.png" class="banner-img"></image>
+    <view class="banner-overlay"></view>
+    <view class="banner-content">
+      <view class="banner-title">大厂简历诊断</view>
+      <view class="banner-subtitle">说说求职意向，资深高P给建议</view>
+    </view>
+  </view>
+
+  <view class="section-title">求职场景描述</view>
+  <textarea
+    class="input-full"
+    placeholder="例如：我是英区留学生，想投递某互联网大厂运营或者产品岗位，请给我的简历一些优化建议"
+    value="{{userDesc}}"
+    bindinput="onDescInput"
+    maxlength="300"
+    auto-height
+  ></textarea>
+
+  <button class="upload-btn" disabled="{{isSubmitting || isPolling}}" bindtap="uploadResume">
+    <text class="icon">📄</text>上传简历并诊断
+  </button>
+  <view class="tip">免费次数有限，记得填好场景再诊断哦～</view>
+
+  <view class="sample-box">
+    <view class="sample-header">
+      <view class="section-title">对口简历参考</view>
+      <view class="refresh-btn" bindtap="onRefreshSample"><text class="refresh-icon">⟳</text></view>
+    </view>
+    <view class="grid-row">
+      <view class="grid-item" wx:for="{{resumeList}}" wx:key="_id" bindtap="goToDetail" data-id="{{item._id}}">
+        <image class="corner-mark" src="{{item.fileType === 'word' ? '/images/icon-word-light.png' : '/images/icon-pdf-light.png'}}"></image>
+        <view class="item-content">
+          <view class="line1">{{item.title}}</view>
+          <view class="line2">{{item.eduTag || '985/海外院校'}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="loading-mask" wx:if="{{isAnalyzing}}">
+    <view class="loading-box">
+      <image src="/images/loading-girl.gif" class="loading-img"></image>
+      <view class="loading-text">{{analyzingText}}</view>
+    </view>
+  </view>
+</view>
