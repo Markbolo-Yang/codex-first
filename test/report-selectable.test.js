@@ -29,3 +29,9 @@ test('all generated report text supports long-press selection', () => {
     assert.match(reportTemplate, selectableText, `${binding} should be selectable`);
   }
 });
+
+test('report leave reminder uses the latest user-facing copy', () => {
+  assert.match(reportTemplate, /先别急/);
+  assert.match(reportTemplate, /离开后暂不能再次查看/);
+  assert.match(reportTemplate, /可以先复制或截图哦/);
+});
