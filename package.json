@@ -12,7 +12,7 @@
   },
   "scripts": {
     "start": "node app.js",
-    "check": "node --check app.js && node --check routes/index.js && node --check routes/diagnose.js && node --check routes/diagnose-db.js && node --check routes/diagnose-service.js && node --check routes/diagnose-worker.js",
+    "check": "node --check app.js && node --check routes/index.js && node --check routes/diagnose.js && node --check routes/diagnose-db.js && node --check routes/diagnose-service.js && node --check routes/diagnose-worker.js && node --check pages/resume/diagnose-stream-parser.js && node --check pages/resume/report.js",
     "test": "node --test test/*.test.js"
   }
 }
