@@ -9,6 +9,10 @@ const resumePageSource = fs.readFileSync(
   path.join(__dirname, '../pages/resume/resume.js'),
   'utf8'
 );
+const resumeTemplate = fs.readFileSync(
+  path.join(__dirname, '../pages/resume/resume.wxml'),
+  'utf8'
+);
 
 const latestCopy = [
   '再等等，一些局部还在精心梳理中',
@@ -29,4 +33,11 @@ test('resume page keeps the latest user-facing copy', () => {
 test('resume page source is not polluted by rendered markdown links', () => {
   assert.doesNotMatch(resumePageSource, /\[https:\/\//);
   assert.doesNotMatch(resumePageSource, /Comment view|Collapse file/);
+});
+
+test('resume page keeps the latest job-target placeholder', () => {
+  assert.match(
+    resumeTemplate,
+    /我是英区留学生，想投递头部互联网大厂运营或者产品岗位，请给我的简历一些建议/
+  );
 });

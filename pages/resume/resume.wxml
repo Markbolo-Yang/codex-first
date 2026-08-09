@@ -1,0 +1,78 @@
+<view class="container">
+  <view class="banner">
+    <image src="/images/interview-banner.png" class="banner-img"></image>
+    <view class="banner-overlay"></view>
+    <view class="banner-content">
+      <view class="banner-title">大厂简历诊断</view>
+      <view class="banner-subtitle">说说求职意向，资深高P给建议</view>
+    </view>
+  </view>
+
+  <view class="section-title">求职场景描述</view>
+  <textarea
+    class="input-full"
+    placeholder="例如：我是英区留学生，想投递头部互联网大厂运营或者产品岗位，请给我的简历一些建议"
+    value="{{userDesc}}"
+    bindinput="onDescInput"
+    maxlength="300"
+    auto-height
+  ></textarea>
+
+  <button class="upload-btn" disabled="{{isSubmitting || isPolling}}" bindtap="uploadResume">
+    <text class="icon">📄</text>上传简历并诊断
+  </button>
+  <view class="tip">免费次数有限，记得填好场景再诊断哦～</view>
+
+  <view class="sample-box">
+    <view class="sample-header">
+      <view class="section-title">对口简历参考</view>
+      <view class="refresh-btn" bindtap="onRefreshSample"><text class="refresh-icon">⟳</text></view>
+    </view>
+    <view class="grid-row">
+      <view class="grid-item" wx:if="{{resumeList.length > 0}}" bindtap="goToDetail" data-id="{{resumeList[0]._id}}">
+        <image class="corner-mark" src="{{resumeList[0].fileType === 'word' ? '/images/icon-word-light.png' : '/images/icon-pdf-light.png'}}"></image>
+        <view class="item-content">
+          <view class="line1">{{resumeList[0].title}}</view>
+          <view class="line2">{{resumeList[0].eduTag || '985/海外院校'}}</view>
+        </view>
+      </view>
+      <view class="grid-item" wx:else>
+        <image class="corner-mark" src="/images/icon-pdf-light.png"></image>
+        <view class="item-content"><view class="line1">David 产品经理CV</view><view class="line2">英硕</view></view>
+      </view>
+      <view class="grid-item" wx:if="{{resumeList.length > 1}}" bindtap="goToDetail" data-id="{{resumeList[1]._id}}">
+        <image class="corner-mark" src="{{resumeList[1].fileType === 'word' ? '/images/icon-word-light.png' : '/images/icon-pdf-light.png'}}"></image>
+        <view class="item-content"><view class="line1">{{resumeList[1].title}}</view><view class="line2">{{resumeList[1].eduTag || '985/海外院校'}}</view></view>
+      </view>
+      <view class="grid-item" wx:else>
+        <image class="corner-mark" src="/images/icon-word-light.png"></image>
+        <view class="item-content"><view class="line1">马同学-运营简历</view><view class="line2">国内985</view></view>
+      </view>
+    </view>
+    <view class="grid-row">
+      <view class="grid-item" wx:if="{{resumeList.length > 2}}" bindtap="goToDetail" data-id="{{resumeList[2]._id}}">
+        <image class="corner-mark" src="{{resumeList[2].fileType === 'word' ? '/images/icon-word-light.png' : '/images/icon-pdf-light.png'}}"></image>
+        <view class="item-content"><view class="line1">{{resumeList[2].title}}</view><view class="line2">{{resumeList[2].eduTag || '985/海外院校'}}</view></view>
+      </view>
+      <view class="grid-item" wx:else>
+        <image class="corner-mark" src="/images/icon-pdf-light.png"></image>
+        <view class="item-content"><view class="line1">Tina Gui-Data scientist</view><view class="line2">美本</view></view>
+      </view>
+      <view class="grid-item" wx:if="{{resumeList.length > 3}}" bindtap="goToDetail" data-id="{{resumeList[3]._id}}">
+        <image class="corner-mark" src="{{resumeList[3].fileType === 'word' ? '/images/icon-word-light.png' : '/images/icon-pdf-light.png'}}"></image>
+        <view class="item-content"><view class="line1">{{resumeList[3].title}}</view><view class="line2">{{resumeList[3].eduTag || '985/海外院校'}}</view></view>
+      </view>
+      <view class="grid-item" wx:else>
+        <image class="corner-mark" src="/images/icon-word-light.png"></image>
+        <view class="item-content"><view class="line1">视觉设计简历模板</view><view class="line2">国内本科</view></view>
+      </view>
+    </view>
+  </view>
+
+  <view class="loading-mask" wx:if="{{isAnalyzing}}">
+    <view class="loading-box">
+      <image src="/images/loading-girl.gif" class="loading-img"></image>
+      <view class="loading-text">{{analyzingText}}</view>
+    </view>
+  </view>
+</view>
