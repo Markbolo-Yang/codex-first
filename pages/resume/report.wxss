@@ -100,10 +100,11 @@ page {
 }
 
 .project-item { margin-bottom: 20rpx; padding-left: 10rpx; }
-.project-name { font-size: 28rpx; font-weight: 500; color: #333; margin-bottom: 10rpx; }
+.project-name { display: block; font-size: 28rpx; font-weight: 500; color: #333; margin-bottom: 10rpx; }
 .compare-box { margin-bottom: 30rpx; }
 
 .original {
+  display: block;
   background: #f2f3f5;
   color: #999;
   padding: 20rpx;
@@ -119,7 +120,7 @@ page {
 }
 
 .optimize text { font-size: 28rpx; color: #1677ff; line-height: 42rpx; display: block; }
-.project-label { font-size: 27rpx; font-weight: 500; color: #1677ff; margin-bottom: 12rpx; }
+.project-label { display: block; font-size: 27rpx; font-weight: 500; color: #1677ff; margin-bottom: 12rpx; }
 
 .copy-btn {
   margin-top: 16rpx;
