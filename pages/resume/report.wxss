@@ -1,0 +1,249 @@
+page {
+  background: #f5f7fa;
+}
+
+.page-shell {
+  min-height: 100vh;
+}
+
+.navigation-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  width: 100%;
+  box-sizing: border-box;
+  background: #1677ff;
+  color: #fff;
+}
+
+.navigation-content {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.navigation-back {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  align-items: center;
+  width: 88rpx;
+  height: 100%;
+  padding-left: 28rpx;
+  box-sizing: border-box;
+}
+
+.navigation-back-icon {
+  width: 22rpx;
+  height: 22rpx;
+  border-left: 5rpx solid #fff;
+  border-bottom: 5rpx solid #fff;
+  transform: rotate(45deg);
+}
+
+.navigation-title {
+  font-size: 32rpx;
+  font-weight: 500;
+}
+
+.container {
+  padding: 20rpx;
+  background-color: #f5f7fa;
+  min-height: 100vh;
+}
+
+.card {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24rpx;
+  text-align: center;
+}
+
+.card-title text {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  text-align: center;
+}
+
+.desc-line,
+.advantage-line,
+.improve-line {
+  display: block;
+  font-size: 28rpx;
+  line-height: 44rpx;
+  margin-bottom: 12rpx;
+}
+
+.desc-line { color: #444; }
+.advantage-line { color: #1677ff; }
+.improve-line { color: #f57c00; }
+.sub-card { margin-bottom: 28rpx; }
+
+.sub-title {
+  font-size: 29rpx;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 16rpx;
+}
+
+.project-item { margin-bottom: 20rpx; padding-left: 10rpx; }
+.project-name { font-size: 28rpx; font-weight: 500; color: #333; margin-bottom: 10rpx; }
+.compare-box { margin-bottom: 30rpx; }
+
+.original {
+  background: #f2f3f5;
+  color: #999;
+  padding: 20rpx;
+  border-radius: 12rpx;
+  font-size: 26rpx;
+  margin-bottom: 16rpx;
+}
+
+.optimize {
+  background: #e8f3ff;
+  padding: 24rpx;
+  border-radius: 12rpx;
+}
+
+.optimize text { font-size: 28rpx; color: #1677ff; line-height: 42rpx; display: block; }
+.project-label { font-size: 27rpx; font-weight: 500; color: #1677ff; margin-bottom: 12rpx; }
+
+.copy-btn {
+  margin-top: 16rpx;
+  font-size: 24rpx;
+  color: #fff;
+  background: #1677ff;
+  padding: 8rpx 20rpx;
+  border-radius: 8rpx;
+  display: inline-block;
+}
+
+.generating-indicator {
+  margin: 12rpx 0 36rpx;
+  text-align: center;
+  color: #999;
+  font-size: 24rpx;
+}
+
+.generating-dot {
+  display: inline-block;
+  margin-right: 10rpx;
+  color: #1677ff;
+  animation: generating-pulse 1s ease-in-out infinite;
+}
+
+@keyframes generating-pulse {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 1; }
+}
+
+.bottom-btn {
+  background: #1677ff;
+  color: #fff;
+  text-align: center;
+  font-size: 30rpx;
+  padding: 28rpx;
+  border-radius: 16rpx;
+  margin: 40rpx 0 60rpx;
+  font-weight: 500;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.leave-mask {
+  position: fixed;
+  z-index: 9999;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48rpx;
+  background: rgba(23, 39, 66, 0.42);
+  box-sizing: border-box;
+}
+
+.leave-dialog {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  padding: 50rpx 38rpx 36rpx;
+  border: 3rpx solid #1677ff;
+  border-radius: 24rpx;
+  background: #fff;
+  box-shadow: 0 20rpx 60rpx rgba(22, 119, 255, 0.2);
+  box-sizing: border-box;
+}
+
+.leave-dialog-accent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 10rpx;
+  background: #1677ff;
+}
+
+.leave-dialog-title {
+  margin-bottom: 22rpx;
+  color: #222;
+  font-size: 34rpx;
+  font-weight: 600;
+  text-align: center;
+}
+
+.leave-dialog-copy {
+  color: #333;
+  font-size: 28rpx;
+  line-height: 44rpx;
+  text-align: center;
+}
+
+.leave-dialog-copy text {
+  color: #1677ff;
+  font-weight: 500;
+}
+
+.leave-dialog-actions {
+  display: flex;
+  gap: 20rpx;
+  margin-top: 38rpx;
+}
+
+.leave-action {
+  flex: 1;
+  height: 80rpx;
+  margin: 0;
+  padding: 0;
+  border-radius: 40rpx;
+  font-size: 27rpx;
+  line-height: 80rpx;
+}
+
+.leave-action::after { border: 0; }
+
+.leave-action-secondary {
+  border: 2rpx solid #1677ff;
+  background: #fff;
+  color: #1677ff;
+}
+
+.leave-action-primary {
+  background: #1677ff;
+  color: #fff;
+}
