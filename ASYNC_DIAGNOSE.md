@@ -4,6 +4,9 @@
 
 ## 接口
 
+以下接口由 `routes/index.js` 统一挂载到 `/api/diagnose`，小程序请求地址与
+`app.js` 的 `/api` 前缀保持一致。
+
 ### 创建任务
 
 `POST /api/diagnose/tasks`
