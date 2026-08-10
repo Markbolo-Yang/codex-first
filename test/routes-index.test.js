@@ -19,3 +19,12 @@ test('mounts the mini-program diagnosis endpoints under /diagnose', () => {
   assert.ok(routePaths.includes('/tasks/:taskId'));
   assert.ok(routePaths.includes('/tasks/:taskId/cancel'));
 });
+
+test('mounts the real resume parsing endpoint under /resume', () => {
+  const parserLayer = router.stack.find(layer => (
+    layer.name === 'router' && /resume/.test(layer.regexp.source)
+  ));
+  assert.ok(parserLayer, 'resume parser router should be mounted');
+  const paths = parserLayer.handle.stack.filter(layer => layer.route).map(layer => layer.route.path);
+  assert.ok(paths.includes('/parse'));
+});

@@ -7,6 +7,13 @@
 以下接口由 `routes/index.js` 统一挂载到 `/api/diagnose`，小程序请求地址与
 `app.js` 的 `/api` 前缀保持一致。
 
+### 解析简历文件
+
+`POST /api/resume/parse`
+
+使用 `multipart/form-data` 上传字段 `file`。支持不超过 5MB 的 `.doc`、`.docx`、
+`.pdf` 和 `.txt` 文件。解析成功后返回真实 `resumeInfo`，小程序再创建诊断任务。
+
 ### 创建任务
 
 `POST /api/diagnose/tasks`
@@ -52,9 +59,9 @@
 时间从 Worker 正式发起火山请求开始计算：
 
 * 20 秒无首字：更新等待状态，不结束任务。
-* 45 秒无首字：`FIRST_TOKEN_TIMEOUT`，不扣次数。
+* 80 秒无首字：`FIRST_TOKEN_TIMEOUT`，不扣次数。
 * 120 秒模型流仍未结束：`STREAM_STUCK`，不扣次数。
-* 45 秒内出现首字：清除首字超时，继续到完整结束或 120 秒上限。
+* 80 秒内出现首字：清除首字超时，继续到完整结束或 120 秒上限。
 
 ## 成功与扣费
 

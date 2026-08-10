@@ -35,11 +35,15 @@ process.env.MODEL_STREAM_API_URL = 'https://example.invalid/chat/completions';
 process.env.ARK_MODEL_ENDPOINT = 'ep-test';
 process.env.VOLC_ACCESS_KEY = 'ark-test';
 
-const { runResumeDiagnosis } = require('../routes/diagnose-service');
+const { FIRST_TOKEN_WAIT_MS, runResumeDiagnosis } = require('../routes/diagnose-service');
 
 test.after(() => {
   Module._load = originalLoad;
   global.fetch = originalFetch;
+});
+
+test('uses the product 80-second first-token timeout', () => {
+  assert.equal(FIRST_TOKEN_WAIT_MS, 80 * 1000);
 });
 
 test('preserves the Ark request shape and assembles a valid streamed diagnosis', async () => {

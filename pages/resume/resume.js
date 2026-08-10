@@ -1,7 +1,11 @@
 'use strict';
 
 const app = getApp();
-const { buildMockResume } = require('./diagnose-mock');
+const {
+  FILE_REQUIREMENT_MESSAGE,
+  validateSelectedFile,
+  uploadResumeFile
+} = require('./resume-file-parser');
 
 const POLL_INTERVAL_MS = 1500;
 const WAITING_COPY_20_MS = 20 * 1000;
@@ -273,7 +277,19 @@ Page({
     wx.chooseMessageFile({
       count: 1,
       type: 'all',
-      success: result => this.startMockDiagnosis(result.tempFiles?.[0] || {}),
+      success: result => {
+        const selectedFile = result.tempFiles?.[0] || {};
+        if (!validateSelectedFile(selectedFile)) {
+          wx.showModal({
+            title: '文件格式不支持',
+            content: FILE_REQUIREMENT_MESSAGE,
+            showCancel: false,
+            confirmText: '确定'
+          });
+          return;
+        }
+        this.startDiagnosis(selectedFile);
+      },
       fail: error => {
         if (String(error?.errMsg || '').includes('cancel')) return;
         wx.showToast({ title: '上传失败', icon: 'error' });
@@ -281,7 +297,7 @@ Page({
     });
   },
 
-  async startMockDiagnosis(selectedFile) {
+  async startDiagnosis(selectedFile) {
     if (this.data.isSubmitting) return;
     this.setData({
       isSubmitting: true,
@@ -292,7 +308,10 @@ Page({
     try {
       const openid = await this.ensureOpenId();
       if (!openid) throw new Error('用户登录失败');
-      const prepared = buildMockResume(selectedFile);
+      const prepared = await uploadResumeFile({
+        baseUrl: app.globalData.baseUrl,
+        file: selectedFile
+      });
       const response = await this.request({
         url: `${app.globalData.baseUrl}/api/diagnose/tasks`,
         method: 'POST',

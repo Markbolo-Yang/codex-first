@@ -5,7 +5,7 @@ const { db, withTimeout } = require('./diagnose-db');
 const MAX_PROMPT_CHAR_LEN = 35000;
 const MAX_CONTENT_LENGTH = 200000;
 const FIRST_TOKEN_WAIT_NOTICE_MS = 20 * 1000;
-const FIRST_TOKEN_WAIT_MS = 45 * 1000;
+const FIRST_TOKEN_WAIT_MS = 80 * 1000;
 const WHOLE_STREAM_MAX_MS = 120 * 1000;
 
 function createDiagnosisError(code, cause) {
