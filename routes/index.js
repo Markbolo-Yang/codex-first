@@ -1,71 +1,108 @@
-'use strict';
 
 var express = require('express');
+
+
 var router = express.Router();
+
 const diagnoseRouter = require('./diagnose');
+
 const resumeParserRouter = require('./resume-parser');
+
 const cloudbase = require('@cloudbase/node-sdk');
+
 const tcbSdk = cloudbase.init({
   secretId: process.env.TCB_SECRET_ID,
   secretKey: process.env.TCB_SECRET_KEY,
   env: process.env.TCB_ENV,
   region: 'ap-shanghai'
 });
+
 const db = tcbSdk.database();
+
 const cmd = db.command;
+
 const fs = require('fs');
+
 const path = require('path');
+
 const crypto = require('crypto');
+
 const https = require('https');
+
 const { URL } = require('url');
 
 const PRIVATE_KEY_PATH = path.join(__dirname, '../apiclient_key.pem');
+
 const CERT_PATH = path.join(__dirname, '../apiclient_cert.pem');
+
 const WECHAT_PUB_KEY_PATH = path.join(__dirname, '../pub_key.pem');
+
 const WECHAT_PUB_ID = process.env.WECHAT_PUB_ID;
 
 let PRIVATE_KEY_RAW = '';
+
 if (fs.existsSync(PRIVATE_KEY_PATH)) {
   PRIVATE_KEY_RAW = fs.readFileSync(PRIVATE_KEY_PATH, 'utf8').replace(/\r/g, '');
+
   console.log('【容器证书校验】私钥加载成功');
+
 } else {
   console.error('【致命错误】未找到商户私钥');
+
 }
 
 let WECHAT_PUB_KEY_RAW = '';
+
 if (fs.existsSync(WECHAT_PUB_KEY_PATH)) {
   WECHAT_PUB_KEY_RAW = fs.readFileSync(WECHAT_PUB_KEY_PATH, 'utf8').replace(/\r/g, '');
+
   console.log('【V3回调验签】微信支付公钥加载成功，公钥ID：', WECHAT_PUB_ID);
+
 } else {
   console.error('【致命错误】未找到微信支付公钥 pub_key.pem');
+
 }
 
 console.log('===== 证书文件校验 =====');
+
 console.log('私钥存在：', fs.existsSync(PRIVATE_KEY_PATH));
+
 console.log('商户证书存在：', fs.existsSync(CERT_PATH));
+
 console.log('微信公钥存在：', fs.existsSync(WECHAT_PUB_KEY_PATH));
+
 console.log('微信公钥ID：', WECHAT_PUB_ID);
+
 console.log('=========================');
 
 function withTimeout(promise, ms = 3000, errMsg = '数据库连接超时') {
   let timer;
+
   const timeout = new Promise((_, reject) => {
     timer = setTimeout(() => reject(new Error(errMsg)), ms);
+
   });
+
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+
 }
 
 async function initUser(openid) {
   return db.runTransaction(async transaction => {
     const userColl = transaction.collection('users');
+
     const now = Date.now();
+
     const nowStr = new Date().toLocaleString('zh-CN', {
       year: 'numeric', month: '2-digit', day: '2-digit',
       hour: '2-digit', minute: '2-digit'
     }).replace(/\//g, '-');
+
     const userRes = await withTimeout(userColl.where({ openid }).get());
+
     if (userRes.data.length === 0) {
       console.log('【用户初始化】新用户创建，openid：', openid);
+
       await withTimeout(userColl.add({
         openid,
         resumeFreeLeft: 2,
@@ -77,19 +114,28 @@ async function initUser(openid) {
         lastLoginAt: now,
         lastLoginStr: nowStr
       }));
+
       const newUser = await withTimeout(userColl.where({ openid }).get());
+
       return newUser.data[0];
+
     }
+
     await withTimeout(userColl.doc(userRes.data[0]._id).update({
       lastLoginAt: now,
       lastLoginStr: nowStr
     }));
+
     return userRes.data[0];
+
   });
+
 }
 
 // Feature mounts only: existing user, quota, order and payment handlers below remain unchanged.
+
 router.use('/diagnose', diagnoseRouter);
+
 router.use('/resume', resumeParserRouter);
 
 router.get('/', (req, res) => res.render('index', { title: 'Express' }));
@@ -97,12 +143,19 @@ router.get('/', (req, res) => res.render('index', { title: 'Express' }));
 router.post('/getUserQuota', async (req, res) => {
   try {
     const { openId } = req.body;
+
     if (!openId) return res.json({ code: -1, msg: '缺少openId参数' });
+
     await initUser(openId);
+
     const userData = await withTimeout(db.collection('users').where({ openid: openId }).get());
+
     if (userData.data.length === 0) return res.json({ code: -2, msg: '用户不存在' });
+
     const info = userData.data[0];
+
     console.log('【配额查询】用户', openId, '简历免费剩余：', info.resumeFreeLeft, '面试免费剩余：', info.interviewFreeLeft, '简历付费次数：', info.payResumeCount, '面试付费次数：', info.payInterviewCount);
+
     return res.json({
       code: 0,
       data: {
@@ -111,75 +164,122 @@ router.post('/getUserQuota', async (req, res) => {
         payResumeCount: info.payResumeCount || 0,
         payInterviewCount: info.payInterviewCount || 0
       }
+
     });
+
   } catch (err) {
     console.error('【配额查询异常】', err);
+
     return res.json({ code: -99, msg: String(err) });
+
   }
+
 });
 
 router.post('/deductQuota', async (req, res) => {
   try {
     const { openId, type } = req.body;
+
     if (!openId || !type) return res.json({ code: -1, msg: '参数缺失' });
+
     await initUser(openId);
+
     const userData = await withTimeout(db.collection('users').where({ openid: openId }).get());
+
     if (userData.data.length === 0) return res.json({ code: -2, msg: '用户不存在' });
+
     const info = userData.data[0];
+
     const updateObj = {};
+
     if (type === 'resume') {
       if (info.resumeFreeLeft > 0) {
         updateObj.resumeFreeLeft = info.resumeFreeLeft - 1;
+
         console.log('【扣减次数】简历免费次数消耗1，剩余：', updateObj.resumeFreeLeft);
+
       } else if (info.payResumeCount > 0) {
         updateObj.payResumeCount = info.payResumeCount - 1;
+
         console.log('【扣减次数】简历付费次数消耗1，剩余：', updateObj.payResumeCount);
+
       } else return res.json({ code: -3, msg: '简历次数耗尽' });
+
     } else if (type === 'interview') {
       if (info.interviewFreeLeft > 0) {
         updateObj.interviewFreeLeft = info.interviewFreeLeft - 1;
+
         console.log('【扣减次数】面试免费次数消耗1，剩余：', updateObj.interviewFreeLeft);
+
       } else if (info.payInterviewCount > 0) {
         updateObj.payInterviewCount = info.payInterviewCount - 1;
+
         console.log('【扣减次数】面试付费次数消耗1，剩余：', updateObj.payInterviewCount);
+
       } else return res.json({ code: -3, msg: '面试次数耗尽' });
+
     } else return res.json({ code: -4, msg: 'type非法' });
+
     await withTimeout(db.collection('users').doc(info._id).update(updateObj));
+
     return res.json({ code: 0, msg: '扣减成功' });
+
   } catch (err) {
     console.error('【扣减配额异常】', err);
+
     return res.json({ code: -99, msg: String(err) });
+
   }
+
 });
 
 router.post('/addPayCount', async (req, res) => {
   try {
     const { openId, type } = req.body;
+
     if (!openId || !type) return res.json({ code: -1, msg: '参数缺失' });
+
     await initUser(openId);
+
     const userData = await withTimeout(db.collection('users').where({ openid: openId }).get());
+
     if (userData.data.length === 0) return res.json({ code: -2, msg: '用户不存在' });
+
     const info = userData.data[0];
+
     const updateObj = {};
+
     if (type === 'resume') {
       updateObj.payResumeCount = (info.payResumeCount || 0) + 1;
+
       console.log('【手动发放付费次数】简历付费次数+1，新值：', updateObj.payResumeCount);
+
     } else if (type === 'interview') {
       updateObj.payInterviewCount = (info.payInterviewCount || 0) + 1;
+
       console.log('【手动发放付费次数】面试付费次数+1，新值：', updateObj.payInterviewCount);
+
     } else return res.json({ code: -3, msg: '类型错误' });
+
     await withTimeout(db.collection('users').doc(info._id).update(updateObj));
+
     return res.json({ code: 0, msg: '付费次数发放成功' });
+
   } catch (err) {
     console.error('【手动发放次数异常】', err);
+
     return res.json({ code: -99, msg: String(err) });
+
   }
+
 });
 
 function httpsRequest(urlStr, method = 'GET', postData = null, extraHeaders = {}) {
   return new Promise((resolve, reject) => {
     const url = new URL(urlStr);
+
     const bodyBuffer = postData ? Buffer.from(postData, 'utf8') : null;
+
     const options = {
       hostname: url.hostname,
       port: url.port || 443,
@@ -192,57 +292,87 @@ function httpsRequest(urlStr, method = 'GET', postData = null, extraHeaders = {}
         ...(bodyBuffer ? { 'Content-Length': bodyBuffer.length } : {}),
         ...extraHeaders
       }
+
     };
+
     const request = https.request(options, response => {
       const chunks = [];
+
       response.on('data', chunk => chunks.push(chunk));
+
       response.on('end', () => {
         const raw = Buffer.concat(chunks).toString('utf8');
+
         try { resolve(raw ? JSON.parse(raw) : {}); } catch (error) { reject(new Error('微信返回非JSON')); }
       });
+
     });
+
     request.on('error', reject);
+
     if (bodyBuffer) request.write(bodyBuffer);
+
     request.end();
+
   });
+
 }
 
 function buildV3Signature(method, urlPath, timestamp, nonce, body, privateKeyRaw) {
   const signStr = `${method}\n${urlPath}\n${timestamp}\n${nonce}\n${body}\n`;
+
   return crypto.createSign('RSA-SHA256').update(signStr, 'utf8').sign(privateKeyRaw, 'base64');
+
 }
 
 function genOutTradeNo() {
   return Date.now() + crypto.randomBytes(6).toString('hex');
+
 }
 
 router.post('/createPayOrder', async (req, res) => {
   try {
     const { openId, type } = req.body;
+
     if (!openId || !type) return res.json({ errcode: -1, errmsg: '参数缺失' });
+
     const outTradeNo = genOutTradeNo();
+
     const goodsName = type === 'resume' ? '简历诊断' : '面试建议';
+
     console.log('【Mock下单】创建', goodsName, '订单，订单号：', outTradeNo, '用户openid：', openId);
+
     await db.collection('orders').add({ data: {
       openid: openId, type, goods_name: goodsName, total_fee: 1, out_trade_no: outTradeNo,
       trade_state: 'NOTPAY', benefit_granted: 0,
       create_time: new Date().toLocaleString('zh-CN').replace(/\//g, '-')
     } });
+
     return res.json({ errcode: 0, prepay_id: `mock_${outTradeNo}`, out_trade_no: outTradeNo });
+
   } catch (err) {
     console.error('【Mock下单异常】', err);
+
     return res.json({ errcode: -99, errmsg: String(err) });
+
   }
+
 });
 
 router.post('/queryPayOrder', async (req, res) => {
   try {
     const { out_trade_no } = req.body;
+
     if (!out_trade_no) return res.json({ errcode: -1, errmsg: '订单号缺失' });
+
     const orderRes = await withTimeout(db.collection('orders').where({ 'data.out_trade_no': out_trade_no }).get());
+
     if (orderRes.data.length === 0) return res.json({ errcode: -2, errmsg: '订单不存在' });
+
     const order = orderRes.data[0].data;
+
     console.log('【订单查询】订单号', out_trade_no, '类型：', order.type, '支付状态：', order.trade_state);
+
     return res.json({
       errcode: 0,
       out_trade_no: order.out_trade_no,
@@ -252,27 +382,39 @@ router.post('/queryPayOrder', async (req, res) => {
       payer: { openid: order.openid },
       success_time: order.pay_time
     });
+
   } catch (err) {
     console.error('【订单查询异常】', err);
+
     return res.json({ errcode: -99, msg: String(err) });
+
   }
+
 });
 
 router.post('/getUserOrderList', async (req, res) => {
   try {
     const listRes = await withTimeout(db.collection('orders').orderBy('create_time', 'desc').limit(100).get());
+
     console.log('【订单列表查询】拉取全部订单总数：', listRes.data.length);
+
     return res.json({ code: 0, data: { list: listRes.data, total: listRes.data.length } });
+
   } catch (err) {
     console.error('【订单列表查询异常】', err);
+
     return res.json({ code: -99, msg: String(err) });
+
   }
+
 });
 
 router.post('/createWxPayOrder', async (req, res) => {
   try {
     const { openId, type } = req.body;
+
     if (!openId || !type) return res.json({ errcode: -1, errmsg: '参数缺失' });
+
     const appid = process.env.APP_ID;
     const mchid = process.env.WX_MCH_ID;
     const serialNo = process.env.WX_CERT_SERIAL;
