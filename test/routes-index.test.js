@@ -28,3 +28,22 @@ test('mounts the real resume parsing endpoint under /resume', () => {
   const paths = parserLayer.handle.stack.filter(layer => layer.route).map(layer => layer.route.path);
   assert.ok(paths.includes('/parse'));
 });
+
+test('keeps the existing quota, order and payment endpoints', () => {
+  const routePaths = router.stack
+    .filter(layer => layer.route)
+    .map(layer => layer.route.path);
+
+  for (const path of [
+    '/getUserQuota',
+    '/deductQuota',
+    '/addPayCount',
+    '/createPayOrder',
+    '/queryPayOrder',
+    '/getUserOrderList',
+    '/createWxPayOrder',
+    '/wxpayNotify'
+  ]) {
+    assert.ok(routePaths.includes(path), `${path} should remain mounted`);
+  }
+});
