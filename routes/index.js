@@ -1,13 +1,11 @@
 
 var express = require('express');
 
-
 var router = express.Router();
-
+// ==========新增：路由引入，紧跟router初始化==========
 const diagnoseRouter = require('./diagnose');
-
 const resumeParserRouter = require('./resume-parser');
-
+// 云数据库全局初始化
 const cloudbase = require('@cloudbase/node-sdk');
 
 const tcbSdk = cloudbase.init({
@@ -18,9 +16,8 @@ const tcbSdk = cloudbase.init({
 });
 
 const db = tcbSdk.database();
-
 const cmd = db.command;
-
+// 证书路径依赖
 const fs = require('fs');
 
 const path = require('path');
@@ -30,15 +27,15 @@ const crypto = require('crypto');
 const https = require('https');
 
 const { URL } = require('url');
-
+// =========== 证书全局常量 ===========
 const PRIVATE_KEY_PATH = path.join(__dirname, '../apiclient_key.pem');
 
 const CERT_PATH = path.join(__dirname, '../apiclient_cert.pem');
-
+// ✅ 微信支付公钥（阶段 2B 新增）
 const WECHAT_PUB_KEY_PATH = path.join(__dirname, '../pub_key.pem');
 
 const WECHAT_PUB_ID = process.env.WECHAT_PUB_ID;
-
+// ✅ 加载商户私钥
 let PRIVATE_KEY_RAW = '';
 
 if (fs.existsSync(PRIVATE_KEY_PATH)) {
@@ -50,7 +47,7 @@ if (fs.existsSync(PRIVATE_KEY_PATH)) {
   console.error('【致命错误】未找到商户私钥');
 
 }
-
+// ✅ 加载微信支付公钥（阶段 2B）
 let WECHAT_PUB_KEY_RAW = '';
 
 if (fs.existsSync(WECHAT_PUB_KEY_PATH)) {
@@ -62,7 +59,7 @@ if (fs.existsSync(WECHAT_PUB_KEY_PATH)) {
   console.error('【致命错误】未找到微信支付公钥 pub_key.pem');
 
 }
-
+// 启动校验日志
 console.log('===== 证书文件校验 =====');
 
 console.log('私钥存在：', fs.existsSync(PRIVATE_KEY_PATH));
@@ -74,7 +71,7 @@ console.log('微信公钥存在：', fs.existsSync(WECHAT_PUB_KEY_PATH));
 console.log('微信公钥ID：', WECHAT_PUB_ID);
 
 console.log('=========================');
-
+// 修复：增加定时器清理，杜绝内存泄漏
 function withTimeout(promise, ms = 3000, errMsg = '数据库连接超时') {
   let timer;
 
@@ -86,7 +83,7 @@ function withTimeout(promise, ms = 3000, errMsg = '数据库连接超时') {
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
 
 }
-
+// ========== 用户初始化（事务加固，防止并发创建重复用户） ==========
 async function initUser(openid) {
   return db.runTransaction(async transaction => {
     const userColl = transaction.collection('users');
@@ -131,15 +128,13 @@ async function initUser(openid) {
   });
 
 }
-
-// Feature mounts only: existing user, quota, order and payment handlers below remain unchanged.
-
+// 简历诊断路由挂载，鉴权逻辑放在diagnose内部，规避SSE中间件冲突
 router.use('/diagnose', diagnoseRouter);
-
+// 简历文件解析路由挂载；支付、配额和扣次逻辑保持不变
 router.use('/resume', resumeParserRouter);
 
 router.get('/', (req, res) => res.render('index', { title: 'Express' }));
-
+// ========== 用户配额 ==========
 router.post('/getUserQuota', async (req, res) => {
   try {
     const { openId } = req.body;
@@ -175,7 +170,7 @@ router.post('/getUserQuota', async (req, res) => {
   }
 
 });
-
+// ========== 扣减配额 ==========
 router.post('/deductQuota', async (req, res) => {
   try {
     const { openId, type } = req.body;
@@ -232,7 +227,7 @@ router.post('/deductQuota', async (req, res) => {
   }
 
 });
-
+// ========== 增加付费次数 ==========
 router.post('/addPayCount', async (req, res) => {
   try {
     const { openId, type } = req.body;
@@ -273,7 +268,7 @@ router.post('/addPayCount', async (req, res) => {
   }
 
 });
-
+// ========== HTTP 请求封装 ==========
 function httpsRequest(urlStr, method = 'GET', postData = null, extraHeaders = {}) {
   return new Promise((resolve, reject) => {
     const url = new URL(urlStr);
@@ -317,7 +312,7 @@ function httpsRequest(urlStr, method = 'GET', postData = null, extraHeaders = {}
   });
 
 }
-
+// ========== V3 签名 ==========
 function buildV3Signature(method, urlPath, timestamp, nonce, body, privateKeyRaw) {
   const signStr = `${method}\n${urlPath}\n${timestamp}\n${nonce}\n${body}\n`;
 
@@ -329,7 +324,7 @@ function genOutTradeNo() {
   return Date.now() + crypto.randomBytes(6).toString('hex');
 
 }
-
+// ========== Mock 下单 ==========
 router.post('/createPayOrder', async (req, res) => {
   try {
     const { openId, type } = req.body;
@@ -358,7 +353,7 @@ router.post('/createPayOrder', async (req, res) => {
   }
 
 });
-
+// ========== 查询订单 ==========
 router.post('/queryPayOrder', async (req, res) => {
   try {
     const { out_trade_no } = req.body;
@@ -391,7 +386,7 @@ router.post('/queryPayOrder', async (req, res) => {
   }
 
 });
-
+// ========== 订单列表 ==========
 router.post('/getUserOrderList', async (req, res) => {
   try {
     const listRes = await withTimeout(db.collection('orders').orderBy('create_time', 'desc').limit(100).get());
@@ -408,7 +403,7 @@ router.post('/getUserOrderList', async (req, res) => {
   }
 
 });
-
+// ========== 微信 V3 下单 ==========
 router.post('/createWxPayOrder', async (req, res) => {
   try {
     const { openId, type } = req.body;
@@ -459,7 +454,9 @@ router.post('/createWxPayOrder', async (req, res) => {
     return res.json({ errcode: -99, errmsg: String(err) });
   }
 });
-
+// ==========================================================
+// ✅ 阶段 2B：微信支付回调（标准验签，生产级）
+// ==========================================================
 router.post('/wxpayNotify', async (req, res) => {
   try {
     const serial = req.headers['wechatpay-serial'];
@@ -467,14 +464,17 @@ router.post('/wxpayNotify', async (req, res) => {
     const timestamp = req.headers['wechatpay-timestamp'];
     const nonce = req.headers['wechatpay-nonce'];
     const rawBody = req.rawBody || JSON.stringify(req.body);
+    // 1️⃣ 基础校验
     if (!serial || !signature || !timestamp || !nonce || !rawBody) {
       console.log('【回调拦截】缺少V3请求头');
       return res.json({ code: 'FAIL' });
     }
+    // 2️⃣ 公钥ID校验
     if (serial !== WECHAT_PUB_ID) {
       console.log('【回调拦截】公钥ID不匹配，传入serial：', serial, '配置公钥ID：', WECHAT_PUB_ID);
       return res.json({ code: 'FAIL' });
     }
+    // 3️⃣ 验签（先验签，后解密）
     const signStr = `${timestamp}\n${nonce}\n${rawBody}\n`;
     const valid = crypto.createVerify('RSA-SHA256').update(signStr, 'utf8').verify(WECHAT_PUB_KEY_RAW, signature, 'base64');
     if (!valid) {
@@ -482,6 +482,7 @@ router.post('/wxpayNotify', async (req, res) => {
       return res.json({ code: 'FAIL' });
     }
     console.log('【回调验签】✅ 验签通过，原始请求体：', rawBody);
+    // 4️⃣ 解密
     const { resource } = req.body;
     const { ciphertext, nonce: aesNonce, associated_data } = resource;
     const decipher = crypto.createDecipheriv('aes-256-gcm', Buffer.from(process.env.WX_API_V3_KEY), Buffer.from(aesNonce));
@@ -497,6 +498,7 @@ router.post('/wxpayNotify', async (req, res) => {
       console.log('【回调】订单未支付成功，无需发放次数');
       return res.json({ code: 'SUCCESS' });
     }
+    // 5️⃣ 更新订单（幂等）
     const updateRes = await db.collection('orders').where({
       'data.out_trade_no': payInfo.out_trade_no,
       'data.benefit_granted': 0
@@ -506,6 +508,7 @@ router.post('/wxpayNotify', async (req, res) => {
       'data.pay_time': new Date().toLocaleString('zh-CN').replace(/\//g, '-'),
       'data.transaction_id': payInfo.transaction_id
     });
+    // 6️⃣ 发放次数（已完善interview分支，增加日志区分业务）
     if (updateRes.updated > 0) {
       const order = (await db.collection('orders').where({ 'data.out_trade_no': payInfo.out_trade_no }).get()).data[0].data;
       console.log('【回调发放次数】订单业务类型：', order.type, '用户openid：', order.openid);
