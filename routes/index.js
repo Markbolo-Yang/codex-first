@@ -25,9 +25,6 @@ const path = require('path');
 
 const crypto = require('crypto');
 
-const https = require('https');
-
-const { URL } = require('url');
 // =========== 证书全局常量 ===========
 const PRIVATE_KEY_PATH = path.join(__dirname, '../apiclient_key.pem');
 
@@ -86,7 +83,7 @@ function withTimeout(promise, ms = 3000, errMsg = '数据库连接超时') {
 }
 // ========== 用户初始化（事务加固，防止并发创建重复用户） ==========
 async function initUser(openid) {
-  return db.runTransaction(async transaction => {
+  return await db.runTransaction(async (transaction) => {
     const userColl = transaction.collection('users');
 
     const now = Date.now();
@@ -131,7 +128,6 @@ async function initUser(openid) {
 }
 // 简历诊断路由挂载，鉴权逻辑放在diagnose内部，规避SSE中间件冲突
 router.use('/diagnose', diagnoseRouter);
-// 简历文件解析路由挂载；支付、配额和扣次逻辑保持不变
 router.use('/resume', resumeParserRouter);
 router.use('/interview', interviewRouter);
 
@@ -271,6 +267,9 @@ router.post('/addPayCount', async (req, res) => {
 
 });
 // ========== HTTP 请求封装 ==========
+const https = require('https');
+const { URL } = require('url');
+
 function httpsRequest(urlStr, method = 'GET', postData = null, extraHeaders = {}) {
   return new Promise((resolve, reject) => {
     const url = new URL(urlStr);
