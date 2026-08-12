@@ -13,7 +13,7 @@ Page({
     isPolling: false,
     articleList: [],
     showLoadingModal: false,
-    loadingText: '正汲取多名大厂人的智慧'
+    loadingText: '基于大厂选拔思维，生成面经中...'
   },
 
   onLoad() { this.getArticleList(); },
@@ -171,7 +171,7 @@ Page({
   },
 
   async beginAdvice({ hasResume, file, jobIntention }) {
-    this.setData({ showLoadingModal: true, loadingText: '正汲取多名大厂人的智慧' });
+    this.setData({ showLoadingModal: true, loadingText: '基于大厂选拔思维，生成面经中...' });
     this.startWaitingTimers();
     try {
       const openid = await this.ensureOpenId();
@@ -236,7 +236,7 @@ Page({
   finishLoading() {
     this.stopAdvicePolling();
     this.clearWaitingTimers();
-    this.setData({ showLoadingModal: false, loadingText: '正汲取多名大厂人的智慧' });
+    this.setData({ showLoadingModal: false, loadingText: '基于大厂选拔思维，生成面经中...' });
   },
 
   showFailure(message) {
@@ -246,27 +246,112 @@ Page({
   matchArticleIcon(title) {
     const rules = [
       { reg: /上岸|通过|拿下|offer|稳了|成功|逆袭|通关/, icon: '🎉' },
+      { reg: /掏空|心累|难哭|崩溃|疲惫|压力/, icon: '😮‍💨' },
       { reg: /备考|备战|准备|倒计时|抓紧/, icon: '⏰' },
+      { reg: /震惊|离谱|没想到|大开眼界/, icon: '😲' },
+      { reg: /想哭|自闭|受挫|被吊打/, icon: '😥' },
+      { reg: /爆火|热门|必看|干货满满/, icon: '🔥' },
       { reg: /技巧|攻略|秘诀/, icon: '💡' },
       { reg: /经验|分享|干货/, icon: '📌' }
     ];
-    const icons = rules.filter(rule => rule.reg.test(title)).map(rule => rule.icon);
-    return Math.random() <= 1 / 3 ? (icons[0] || '🌟') + ' ' : '';
+    let icons = [];
+    for (const rule of rules) {
+      if (rule.reg.test(title)) icons.push(rule.icon);
+    }
+    icons = icons.length ? icons : ['🌟', '✨', '📚', '💼', '✅'];
+    if (Math.random() > 1 / 3) return '';
+    const count = Math.random() > 0.5 ? 1 : 2;
+    const result = [];
+    for (let index = 0; index < count; index += 1) {
+      result.push(icons[Math.floor(Math.random() * icons.length)]);
+    }
+    return result.join('') + ' ';
   },
 
   getArticleList() {
     wx.cloud.database().collection('articlePool').get().then(result => {
-      const top = result.data.filter(item => item.isTop === true);
-      const normal = result.data.filter(item => !item.isTop).sort(() => Math.random() - 0.5);
-      this.setData({ articleList: [...top, ...normal.slice(0, 8 - top.length)].map(item => ({ ...item, icon: this.matchArticleIcon(item.title) })) });
+      const list = result.data;
+      const top = list.filter(item => item.isTop === true);
+      const normal = list.filter(item => !item.isTop);
+      if (normal.length) {
+        for (let index = normal.length - 1; index > 0; index -= 1) {
+          const randomIndex = Math.floor(Math.random() * (index + 1));
+          [normal[index], normal[randomIndex]] = [normal[randomIndex], normal[index]];
+        }
+      }
+      this.setData({
+        articleList: [...top, ...normal.slice(0, 8 - top.length)].map(item => ({
+          ...item,
+          icon: this.matchArticleIcon(item.title)
+        }))
+      });
     });
   },
 
+  // 还原旧版完整跳转逻辑，恢复直接打开文章功能
   goToArticle(event) {
-    const { url, type } = event.currentTarget.dataset;
-    if (!url) return wx.showToast({ title: '链接为空', icon: 'none' });
-    if (type === 'miniProgram') return wx.navigateToMiniProgram({ shortLink: url });
-    if (wx.openOfficialAccountArticle) return wx.openOfficialAccountArticle({ url });
-    wx.setClipboardData({ data: url });
+    const dataset = event.currentTarget.dataset;
+    const link = dataset.url;
+    const articleType = dataset.type;
+
+    if (!link) {
+      wx.showToast({ title: '链接为空', icon: 'none' });
+      return;
+    }
+
+    if (articleType === 'miniProgram') {
+      wx.navigateToMiniProgram({
+        shortLink: link,
+        success() {
+          console.log('跳转成功', link);
+        },
+        fail(error) {
+          if (error.errCode === 20001 || error.errMsg.includes('cancel')) return;
+          wx.showModal({
+            title: '跳转失败',
+            content: '版本过低，复制链接手动打开？',
+            confirmText: '复制',
+            cancelText: '取消',
+            success(result) {
+              if (result.confirm) wx.setClipboardData({ data: link });
+            }
+          });
+        }
+      });
+    } else if (articleType === 'official') {
+      if (wx.openOfficialAccountArticle) {
+        wx.openOfficialAccountArticle({
+          url: link,
+          fail() {
+            wx.showModal({
+              title: '打开失败',
+              content: '是否复制链接？',
+              confirmText: '复制',
+              cancelText: '取消',
+              success(result) {
+                if (result.confirm) wx.setClipboardData({ data: link });
+              }
+            });
+          }
+        });
+      } else {
+        wx.showModal({
+          title: '微信版本太低',
+          content: '复制链接手动打开？',
+          confirmText: '复制',
+          cancelText: '取消',
+          success(result) {
+            if (result.confirm) wx.setClipboardData({ data: link });
+          }
+        });
+      }
+    } else if (wx.openOfficialAccountArticle) {
+      wx.openOfficialAccountArticle({ url: link });
+    } else {
+      wx.setClipboardData({
+        data: link,
+        success: () => wx.showToast({ title: '链接已复制', icon: 'none' })
+      });
+    }
   }
 });

@@ -36,3 +36,20 @@ test('interview schema accepts complete ok output and rejects populated invalid 
   assert.doesNotThrow(() => validateInterviewSchema({ status: 'ok', brief_summary: '', profileOverview: 'profile', keyExaminePoint: ['point'], matchAdvice: 'advice', interviewSkillGuide: guide, questionList: questions }));
   assert.throws(() => validateInterviewSchema({ status: 'all_invalid', brief_summary: 'tip', profileOverview: 'must be empty', keyExaminePoint: [], matchAdvice: '', interviewSkillGuide: { selfIntro: '', projectRule: '', interviewHabit: '' }, questionList: [] }));
 });
+
+test('interview page preserves the approved copy and readable style source', () => {
+  const wxml = fs.readFileSync('pages/interview/interview.wxml', 'utf8');
+  const wxss = fs.readFileSync('pages/interview/interview.wxss', 'utf8');
+  assert.match(wxml, /我目前在校专业City Technology MKT，有过1段实习经历/);
+  assert.match(wxml, /无简历, 直接获取面经/);
+  assert.ok(wxss.split('\n').length > 100, 'interview.wxss should remain readable and multiline');
+  assert.match(wxss, /width: 100% !important;/);
+  assert.match(wxss, /transition: all 0\.2s ease;/);
+});
+
+test('advice styles remain readable and retain the original visual structure', () => {
+  const wxss = fs.readFileSync('pages/advice/advice.wxss', 'utf8');
+  assert.ok(wxss.split('\n').length > 150, 'advice.wxss should remain readable and multiline');
+  assert.match(wxss, /box-shadow: 0 6rpx 20rpx rgba\(0, 0, 0, 0\.04\)/);
+  assert.match(wxss, /\.demo-collapsed/);
+});

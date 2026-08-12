@@ -22,11 +22,26 @@ function validateInterviewSchema(value) {
   if (!guide || typeof guide !== 'object' || ['selfIntro', 'projectRule', 'interviewHabit'].some(field => typeof guide[field] !== 'string')) {
     throw createDiagnosisError('MODEL_JSON_SCHEMA_INVALID');
   }
-  if (!Array.isArray(value.questionList) || value.questionList.some(item => !item || typeof item !== 'object' || ['title', 'thinking', 'sampleAnswer'].some(field => typeof item[field] !== 'string'))) {
+  const hasInvalidQuestion = !Array.isArray(value.questionList) || value.questionList.some(item => (
+    !item ||
+    typeof item !== 'object' ||
+    ['title', 'thinking', 'sampleAnswer'].some(field => typeof item[field] !== 'string')
+  ));
+  if (hasInvalidQuestion) {
     throw createDiagnosisError('MODEL_JSON_SCHEMA_INVALID');
   }
   if (value.status === 'ok') {
-    if (!value.profileOverview.trim() || !value.matchAdvice.trim() || value.keyExaminePoint.length === 0 || value.questionList.length < 7 || value.questionList.length > 11 || value.questionList.some(item => !item.title.trim() || !item.thinking.trim() || !item.sampleAnswer.trim())) {
+    const hasInvalidOkContent = !value.profileOverview.trim() ||
+      !value.matchAdvice.trim() ||
+      value.keyExaminePoint.length === 0 ||
+      value.questionList.length < 7 ||
+      value.questionList.length > 11 ||
+      value.questionList.some(item => (
+        !item.title.trim() ||
+        !item.thinking.trim() ||
+        !item.sampleAnswer.trim()
+      ));
+    if (hasInvalidOkContent) {
       throw createDiagnosisError('MODEL_JSON_SCHEMA_INVALID');
     }
   } else if (!value.brief_summary.trim()) {
