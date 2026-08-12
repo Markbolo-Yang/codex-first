@@ -1,0 +1,26 @@
+<view class="wrap">
+  <view wx:if="{{report.profileOverview || report.keyExaminePoint.length || report.matchAdvice}}" class="block">
+    <view class="block-title">📌 我的面试定位</view>
+    <text selectable class="info-line">{{report.profileOverview}}</text>
+    <view wx:if="{{report.keyExaminePoint.length}}" class="sub-title">岗位核心考察点</view>
+    <view wx:for="{{report.keyExaminePoint}}" wx:key="index" class="info-desc">• {{item}}</view>
+    <text selectable class="match-tip">{{report.matchAdvice}}</text>
+  </view>
+  <view wx:if="{{report.interviewSkillGuide.selfIntro || report.interviewSkillGuide.projectRule || report.interviewSkillGuide.interviewHabit}}" class="block">
+    <view class="block-title">💬 面试表达高分指南</view>
+    <view wx:if="{{report.interviewSkillGuide.selfIntro}}" class="item-box"><view class="item-tit">1. 自我介绍</view><text selectable>{{report.interviewSkillGuide.selfIntro}}</text></view>
+    <view wx:if="{{report.interviewSkillGuide.projectRule}}" class="item-box"><view class="item-tit">2. 项目作答公式</view><text selectable>{{report.interviewSkillGuide.projectRule}}</text></view>
+    <view wx:if="{{report.interviewSkillGuide.interviewHabit}}" class="item-box"><view class="item-tit">3. 面试习惯与复盘</view><text selectable>{{report.interviewSkillGuide.interviewHabit}}</text></view>
+  </view>
+  <view wx:if="{{report.questionList.length}}" class="block">
+    <view class="block-title">❓ 岗位高频预判问题</view>
+    <view wx:for="{{report.questionList}}" wx:key="index" class="q-box">
+      <view class="q-tit">{{index + 1}}. {{item.title}}</view>
+      <view wx:if="{{item.thinking}}" class="q-dir">答题思路：{{item.thinking}}</view>
+      <text wx:if="{{folds[index] && item.sampleAnswer}}" selectable class="sample-answer">{{item.sampleAnswer}}</text>
+      <view wx:if="{{item.sampleAnswer}}" class="fold-btn" data-index="{{index}}" bindtap="toggleFold">{{folds[index] ? '▼ 收起' : '▶ 查看完整示范'}}</view>
+    </view>
+  </view>
+  <view wx:if="{{generating}}" class="generating-indicator"><view class="generating-dot"></view>报告持续生成中...</view>
+  <view wx:if="{{displayComplete}}" class="bottom-btn"><button bindtap="goMentor">🚀 转真人导师1V1面试咨询</button></view>
+</view>

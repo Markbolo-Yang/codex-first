@@ -4,6 +4,7 @@ const express = require('express');
 const axios = require('axios');
 const { db } = require('./routes/diagnose-db');
 const { startDiagnoseWorker, stopDiagnoseWorker } = require('./routes/diagnose-worker');
+const { startInterviewWorker, stopInterviewWorker } = require('./routes/interview-worker');
 
 const app = express();
 app.use(express.json());
@@ -70,11 +71,13 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`Express server listening on port ${PORT}`);
   // 每个Node进程只启动一次。数据库租约负责多实例之间的任务抢占。
   startDiagnoseWorker();
+  startInterviewWorker();
 });
 
 function shutdown(signal) {
   console.log(`【服务退出】收到${signal}，停止领取新的诊断任务`);
   stopDiagnoseWorker();
+  stopInterviewWorker();
   server.close(() => process.exit(0));
   setTimeout(() => process.exit(1), 10000).unref();
 }

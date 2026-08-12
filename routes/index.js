@@ -5,6 +5,7 @@ var router = express.Router();
 // ==========新增：路由引入，紧跟router初始化==========
 const diagnoseRouter = require('./diagnose');
 const resumeParserRouter = require('./resume-parser');
+const interviewRouter = require('./interview');
 // 云数据库全局初始化
 const cloudbase = require('@cloudbase/node-sdk');
 
@@ -132,6 +133,7 @@ async function initUser(openid) {
 router.use('/diagnose', diagnoseRouter);
 // 简历文件解析路由挂载；支付、配额和扣次逻辑保持不变
 router.use('/resume', resumeParserRouter);
+router.use('/interview', interviewRouter);
 
 router.get('/', (req, res) => res.render('index', { title: 'Express' }));
 // ========== 用户配额 ==========

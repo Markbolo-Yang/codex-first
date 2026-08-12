@@ -1,0 +1,24 @@
+<view class="container">
+  <view class="page">
+    <view class="card">
+      <view class="title">大厂面试辅导</view>
+      <view class="desc">描述你的面试场景（公司+岗位+个人因素）</view>
+      <textarea class="input" placeholder="例如：下周要面京东管培生 / 快手产品经理，我目前有过1段实习经历..." value="{{inputContent}}" bindinput="onInputChange"></textarea>
+      <button class="btn blue" bindtap="uploadResumeAndGetAdvice" disabled="{{isPolling || showLoadingModal}}">💡 上传简历&获取面经</button>
+      <button class="btn dark-gray" bindtap="getAdviceWithoutResume" disabled="{{isPolling || showLoadingModal}}">无简历，直接获取面经</button>
+    </view>
+    <view class="card">
+      <view class="title">面试干货</view>
+      <view class="article-item" wx:for="{{articleList}}" wx:key="_id" data-type="{{item.type}}" data-url="{{item.jumpUrl}}" bindtap="goToArticle">
+        <view class="article-title">{{item.icon}}{{item.title}}</view>
+        <view class="article-tags">{{item.tags}}</view>
+      </view>
+    </view>
+  </view>
+  <view wx:if="{{showLoadingModal}}" class="loading-overlay">
+    <view class="loading-box">
+      <image src="/images/loading-boy.gif" class="loading-gif"></image>
+      <view class="loading-text">{{loadingText}}</view>
+    </view>
+  </view>
+</view>
