@@ -27,6 +27,8 @@ test('advice page renders fixed schema and foldable answers', () => {
   assert.match(wxml, /item\.thinking/);
   assert.match(wxml, /toggleFold/);
   assert.match(wxml, /报告持续生成中/);
+  assert.match(wxml, /▲ 收起/);
+  assert.doesNotMatch(wxml, /▼ 收起/);
 });
 
 test('interview schema accepts complete ok output and rejects populated invalid output', () => {

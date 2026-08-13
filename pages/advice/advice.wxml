@@ -59,7 +59,7 @@
         data-index="{{index}}"
         bindtap="toggleFold"
       >
-        {{folds[index] ? '▼ 收起' : '▶ 查看完整示范'}}
+        {{folds[index] ? '▲ 收起' : '▶ 查看完整示范'}}
       </view>
     </view>
   </view>
