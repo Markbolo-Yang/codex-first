@@ -53,3 +53,13 @@ test('advice styles remain readable and retain the original visual structure', (
   assert.match(wxss, /box-shadow: 0 6rpx 20rpx rgba\(0, 0, 0, 0\.04\)/);
   assert.match(wxss, /\.demo-collapsed/);
 });
+
+test('interview and advice pages preserve the latest approved user-facing copy', () => {
+  const interview = fs.readFileSync('pages/interview/interview.js', 'utf8');
+  const advice = fs.readFileSync('pages/advice/advice.js', 'utf8');
+  assert.match(interview, /请从聊天记录选择简历/);
+  assert.match(interview, /填一下面试信息/);
+  assert.match(interview, /再等等，专家们正在整理干货/);
+  assert.match(interview, /马上完成，HR正在做针对性的调整/);
+  assert.match(advice, /面经的核心题库被卡住了，稍后重试即可/);
+});

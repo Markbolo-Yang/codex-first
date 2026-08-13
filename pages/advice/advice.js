@@ -127,7 +127,7 @@ Page({
   showFailure(message) {
     wx.showModal({
       title: '意外发生啦',
-      content: message || '面试建议暂时没有完成，请稍后重试',
+      content: message || '面经的核心题库被卡住了，稍后重试即可',
       showCancel: false,
       confirmText: '我知道了',
       success: () => wx.navigateBack()

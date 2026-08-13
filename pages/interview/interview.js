@@ -122,7 +122,7 @@ Page({
     const tip = wx.getStorageSync('interviewTip') || 0;
     if (tip < 2) {
       wx.setStorageSync('interviewTip', tip + 1);
-      wx.showModal({ title: '上传提示', content: '请从聊天记录选择简历文件', showCancel: false, success: () => this.chooseFile() });
+      wx.showModal({ title: '上传提示', content: '请从聊天记录选择简历', showCancel: false, success: () => this.chooseFile() });
     } else this.chooseFile();
   },
 
@@ -133,12 +133,12 @@ Page({
       success: async result => {
         const file = result.tempFiles?.[0] || {};
         if (!validateSelectedFile(file)) {
-          wx.showModal({ title: '文件格式不支持', content: FILE_REQUIREMENT_MESSAGE, showCancel: false, confirmText: '确定' });
+          wx.showModal({ title: '格式不支持', content: FILE_REQUIREMENT_MESSAGE, showCancel: false, confirmText: '确定' });
           return;
         }
         const content = this.data.inputContent.trim();
         if (!content) {
-          wx.showToast({ title: '请填写面试场景描述', icon: 'none' });
+          wx.showToast({ title: '填一下面试信息', icon: 'none' });
           return;
         }
         if (!await this.checkInterviewQuota()) return;
@@ -150,7 +150,7 @@ Page({
   async getAdviceWithoutResume() {
     const content = this.data.inputContent.trim();
     if (!content) {
-      wx.showToast({ title: '请填写面试场景描述', icon: 'none' });
+      wx.showToast({ title: '填一下面试信息', icon: 'none' });
       return;
     }
     if (this.data.isPolling || this.data.showLoadingModal || !await this.checkInterviewQuota()) return;
@@ -159,8 +159,8 @@ Page({
 
   startWaitingTimers() {
     this.clearWaitingTimers();
-    this._waiting20Timer = setTimeout(() => this.data.showLoadingModal && this.setData({ loadingText: '再等等，面试官们正在梳理重点' }), WAITING_COPY_20_MS);
-    this._waiting50Timer = setTimeout(() => this.data.showLoadingModal && this.setData({ loadingText: '马上完成了，正在做最后复盘' }), WAITING_COPY_50_MS);
+    this._waiting20Timer = setTimeout(() => this.data.showLoadingModal && this.setData({ loadingText: '再等等，专家们正在整理干货' }), WAITING_COPY_20_MS);
+    this._waiting50Timer = setTimeout(() => this.data.showLoadingModal && this.setData({ loadingText: '马上完成，HR正在做针对性的调整' }), WAITING_COPY_50_MS);
   },
 
   clearWaitingTimers() {
