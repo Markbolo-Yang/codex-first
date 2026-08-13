@@ -1,25 +1,23 @@
 'use strict';
 
+const {
+  emptyAdvice,
+  normalizeAdvice,
+  parseStreamingAdvice,
+  hasAdviceContent
+} = require('./advice-stream-parser');
+
 const POLL_INTERVAL_MS = 1500;
 const TYPE_INTERVAL_MS = 40;
 const TYPE_STEP = 8;
 
 function emptyReport() {
-  return {
-    profileOverview: '',
-    keyExaminePoint: [],
-    matchAdvice: '',
-    interviewSkillGuide: {
-      selfIntro: '',
-      projectRule: '',
-      interviewHabit: ''
-    },
-    questionList: []
-  };
+  return emptyAdvice();
 }
 
 function growText(current, target, budget) {
   if (current === target || budget <= 0) return [current, budget];
+  if (!target.startsWith(current)) return [target, budget];
   const next = target.slice(0, Math.min(target.length, current.length + budget));
   return [next, budget - (next.length - current.length)];
 }
@@ -64,6 +62,9 @@ Page({
     this.openid = options.openid;
     this.afterSeq = 0;
     this.generation = null;
+    this.rawChunks = '';
+    this.targetReport = emptyReport();
+    this.backendSucceeded = false;
     this.poll();
   },
   onUnload() {
@@ -89,12 +90,26 @@ Page({
     if (!task) return this.schedulePoll();
     if (this.generation !== null && this.generation !== task.generation) {
       this.afterSeq = 0;
-      this.setData({ report: emptyReport() });
+      this.rawChunks = '';
+      this.targetReport = emptyReport();
+      this.backendSucceeded = false;
+      this.setData({ report: emptyReport(), generating: true, displayComplete: false });
     }
     this.generation = task.generation;
+    for (const chunk of task.chunks || []) {
+      this.rawChunks += chunk.text || '';
+    }
     this.afterSeq = task.latest_returned_seq;
+
+    const preview = parseStreamingAdvice(this.rawChunks);
+    if (preview && hasAdviceContent(preview)) {
+      this.targetReport = preview;
+      this.startTypewriter();
+    }
+
     if (task.status === 'succeeded' && task.result) {
-      this.targetReport = task.result;
+      this.backendSucceeded = true;
+      this.targetReport = normalizeAdvice(task.result);
       this.startTypewriter();
       return;
     }
@@ -112,8 +127,10 @@ Page({
     if (this.typeTimer) return;
     this.typeTimer = setInterval(() => {
       const report = advanceReport(this.data.report, this.targetReport);
-      const complete = JSON.stringify(report) === JSON.stringify(this.targetReport);
-      this.setData({ report, generating: !complete, displayComplete: complete });
+      const normalizedTarget = normalizeAdvice(this.targetReport);
+      const complete = JSON.stringify(report) === JSON.stringify(normalizedTarget);
+      const displayComplete = complete && this.backendSucceeded;
+      this.setData({ report, generating: !displayComplete, displayComplete });
       if (complete) {
         clearInterval(this.typeTimer);
         this.typeTimer = null;

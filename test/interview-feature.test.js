@@ -63,3 +63,20 @@ test('interview and advice pages preserve the latest approved user-facing copy',
   assert.match(interview, /马上完成，HR正在做针对性的调整/);
   assert.match(advice, /面经的核心题库被卡住了，稍后重试即可/);
 });
+
+test('advice consumes incremental chunks and only finishes after backend success', () => {
+  const source = fs.readFileSync('pages/advice/advice.js', 'utf8');
+  assert.match(source, /for \(const chunk of task\.chunks \|\| \[\]\)/);
+  assert.match(source, /parseStreamingAdvice\(this\.rawChunks\)/);
+  assert.match(source, /this\.backendSucceeded = true/);
+  assert.match(source, /complete && this\.backendSucceeded/);
+  assert.match(source, /normalizeAdvice\(task\.result\)/);
+});
+
+test('interview waits for safe display content before opening the advice page', () => {
+  const source = fs.readFileSync('pages/interview/interview.js', 'utf8');
+  assert.match(source, /after_seq: this\._adviceAfterSeq/);
+  assert.match(source, /parseStreamingAdvice\(this\._adviceRawChunks\)/);
+  assert.match(source, /task\.status === 'succeeded' \|\| hasAdviceContent\(preview\)/);
+  assert.doesNotMatch(source, /task\.status === 'succeeded' \|\| task\.chunks\?\.length > 0/);
+});

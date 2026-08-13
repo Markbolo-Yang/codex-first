@@ -2,6 +2,7 @@
 
 const app = getApp();
 const { FILE_REQUIREMENT_MESSAGE, validateSelectedFile, uploadResumeFile } = require('../resume/resume-file-parser');
+const { parseStreamingAdvice, hasAdviceContent } = require('../advice/advice-stream-parser');
 
 const POLL_INTERVAL_MS = 1500;
 const WAITING_COPY_20_MS = 20 * 1000;
@@ -187,6 +188,9 @@ Page({
       if (response.code !== 0 || !response.data?.task_id) throw new Error(response.msg || '面试建议任务创建失败');
       this._adviceTaskId = response.data.task_id;
       this._adviceOpenId = openid;
+      this._adviceAfterSeq = 0;
+      this._adviceGeneration = null;
+      this._adviceRawChunks = '';
       this.startAdvicePolling();
     } catch (error) {
       this.finishLoading();
@@ -211,11 +215,24 @@ Page({
     try {
       const response = await new Promise((resolve, reject) => wx.request({
         url: `${app.globalData.baseUrl}/api/interview/tasks/${encodeURIComponent(this._adviceTaskId)}`,
-        method: 'GET', data: { openid: this._adviceOpenId, after_seq: 0, limit: 1 }, success: resolve, fail: reject
+        method: 'GET',
+        data: { openid: this._adviceOpenId, after_seq: this._adviceAfterSeq, limit: 50 },
+        success: resolve,
+        fail: reject
       }));
       const task = response.data?.data;
       if (response.statusCode !== 200 || response.data?.code !== 0 || !task) throw new Error(response.data?.msg || '面试建议进度查询失败');
-      if (task.status === 'succeeded' || task.chunks?.length > 0) {
+      if (this._adviceGeneration !== null && this._adviceGeneration !== task.generation) {
+        this._adviceAfterSeq = 0;
+        this._adviceRawChunks = '';
+      }
+      this._adviceGeneration = task.generation;
+      for (const chunk of task.chunks || []) {
+        this._adviceRawChunks += chunk.text || '';
+      }
+      this._adviceAfterSeq = task.latest_returned_seq;
+      const preview = parseStreamingAdvice(this._adviceRawChunks);
+      if (task.status === 'succeeded' || hasAdviceContent(preview)) {
         this.stopAdvicePolling();
         this.finishLoading();
         wx.navigateTo({ url: `/pages/advice/advice?taskId=${encodeURIComponent(this._adviceTaskId)}&openid=${encodeURIComponent(this._adviceOpenId)}` });
