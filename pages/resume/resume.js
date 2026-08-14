@@ -28,15 +28,13 @@ Page({
   },
 
   onShow() {
-    this.showMentorHotBadge();
+    this.syncTabBar();
   },
 
-  showMentorHotBadge() {
-    wx.setTabBarBadge({
-      index: 2,
-      text: 'HOT',
-      fail: error => console.warn('真人导师HOT标识展示失败', error)
-    });
+  syncTabBar() {
+    if (typeof this.getTabBar !== 'function') return;
+    const tabBar = this.getTabBar();
+    if (tabBar) tabBar.setData({ selected: 0 });
   },
 
   goToCareerPlanning() {

@@ -1,0 +1,42 @@
+{
+  "pages": [
+    "pages/resume/resume",
+    "pages/resume/detail",
+    "pages/resume/report",
+    "pages/interview/interview",
+    "pages/webview/webview",
+    "pages/advice/advice",
+    "pages/mentor/mentor",
+    "pages/mentor/chat",
+    "pages/mine/mine",
+    "pages/mine/orderlist/orderlist",
+    "pages/mine/message/message",
+    "pages/mine/policy/policy"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#1677ff",
+    "navigationBarTitleText": "留畅拿offer",
+    "navigationBarTitleAlign": "left",
+    "navigationBarTextStyle": "white"
+  },
+  "plugins": {
+    "WechatSI": {
+      "provider": "wx069ba97219f66d99",
+      "version": "0.3.6"
+    }
+  },
+  "tabBar": {
+    "custom": true,
+    "color": "#666",
+    "selectedColor": "#1677ff",
+    "backgroundColor": "#ffffff",
+    "list": [
+      { "pagePath": "pages/resume/resume", "text": "简历诊断", "iconPath": "images/tab/resume.png", "selectedIconPath": "images/tab/resume_active.png" },
+      { "pagePath": "pages/interview/interview", "text": "面试辅导", "iconPath": "images/tab/interview.png", "selectedIconPath": "images/tab/interview_active.png" },
+      { "pagePath": "pages/mentor/mentor", "text": "真人导师", "iconPath": "images/tab/mentor.png", "selectedIconPath": "images/tab/mentor_active.png" },
+      { "pagePath": "pages/mine/mine", "text": "我的", "iconPath": "images/tab/mine.png", "selectedIconPath": "images/tab/mine_active.png" }
+    ]
+  },
+  "sitemapLocation": "sitemap.json"
+}

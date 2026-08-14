@@ -24,7 +24,7 @@ Page({
 
   onShow() {
     const app = getApp();
-    this.showMentorHotBadge();
+    this.syncTabBar();
     this.stopMentorScroll();
 
     if (app.globalData.fromReportPage) {
@@ -49,12 +49,10 @@ Page({
     this.getCloudMentorData();
   },
 
-  showMentorHotBadge() {
-    wx.setTabBarBadge({
-      index: 2,
-      text: 'HOT',
-      fail: error => console.warn('真人导师HOT标识展示失败', error)
-    });
+  syncTabBar() {
+    if (typeof this.getTabBar !== 'function') return;
+    const tabBar = this.getTabBar();
+    if (tabBar) tabBar.setData({ selected: 2 });
   },
 
   selectCategory(index) {
