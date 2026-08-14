@@ -1,8 +1,6 @@
 .page {
   background: #f7f8fa;
   min-height: 100vh;
-  padding-bottom: calc(100rpx + env(safe-area-inset-bottom));
-  box-sizing: border-box;
 }
 
 .banner { width: 100%; }

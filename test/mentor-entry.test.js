@@ -9,10 +9,7 @@ const root = path.join(__dirname, '..');
 const resumeJs = fs.readFileSync(path.join(root, 'pages/resume/resume.js'), 'utf8');
 const resumeWxml = fs.readFileSync(path.join(root, 'pages/resume/resume.wxml'), 'utf8');
 const mentorJs = fs.readFileSync(path.join(root, 'pages/mentor/mentor.js'), 'utf8');
-const tabBarJs = fs.readFileSync(path.join(root, 'custom-tab-bar/index.js'), 'utf8');
 const appJson = JSON.parse(fs.readFileSync(path.join(root, 'app.json'), 'utf8'));
-const tabBarWxml = fs.readFileSync(path.join(root, 'custom-tab-bar/index.wxml'), 'utf8');
-const tabBarWxss = fs.readFileSync(path.join(root, 'custom-tab-bar/index.wxss'), 'utf8');
 
 test('resume banner opens the mentor tab with career planning selected', () => {
   assert.match(resumeWxml, /class="banner"[^>]*bindtap="goToCareerPlanning"/);
@@ -23,13 +20,21 @@ test('resume banner opens the mentor tab with career planning selected', () => {
   assert.match(mentorJs, /removeStorageSync\('mentorDefaultType'\)/);
 });
 
-test('the custom mentor tab displays a positioned HOT bubble', () => {
-  assert.equal(appJson.tabBar.custom, true);
-  assert.equal(appJson.tabBar.list[2].pagePath, 'pages/mentor/mentor');
-  assert.match(tabBarWxml, /wx:if="\{\{item\.hot\}\}" class="tab-bar__hot">HOT/);
-  assert.match(tabBarWxss, /\.tab-bar__hot\s*\{[^}]*position: absolute;/s);
-  assert.match(tabBarWxss, /background: linear-gradient\([^;]*#f5222d/);
-  assert.match(tabBarJs, /getCurrentPages\(\)/);
-  assert.doesNotMatch(resumeJs, /setTabBarBadge/);
-  assert.doesNotMatch(mentorJs, /setTabBarBadge/);
+test('the native mentor tab displays HOT without changing the tab bar appearance', () => {
+  assert.equal(appJson.tabBar.custom, undefined);
+  assert.deepEqual(appJson.tabBar, {
+    color: '#666',
+    selectedColor: '#1677ff',
+    backgroundColor: '#ffffff',
+    list: [
+      { pagePath: 'pages/resume/resume', text: '简历诊断', iconPath: 'images/tab/resume.png', selectedIconPath: 'images/tab/resume_active.png' },
+      { pagePath: 'pages/interview/interview', text: '面试辅导', iconPath: 'images/tab/interview.png', selectedIconPath: 'images/tab/interview_active.png' },
+      { pagePath: 'pages/mentor/mentor', text: '真人导师', iconPath: 'images/tab/mentor.png', selectedIconPath: 'images/tab/mentor_active.png' },
+      { pagePath: 'pages/mine/mine', text: '我的', iconPath: 'images/tab/mine.png', selectedIconPath: 'images/tab/mine_active.png' }
+    ]
+  });
+  for (const source of [resumeJs, mentorJs]) {
+    assert.match(source, /setTabBarBadge\(\{\s*index: 2,\s*text: 'HOT'/);
+    assert.doesNotMatch(source, /getTabBar/);
+  }
 });

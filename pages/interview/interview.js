@@ -19,12 +19,6 @@ Page({
 
   onLoad() { this.getArticleList(); },
 
-  onShow() {
-    if (typeof this.getTabBar !== 'function') return;
-    const tabBar = this.getTabBar();
-    if (tabBar) tabBar.setData({ selected: 1 });
-  },
-
   onUnload() {
     this.clearOrderPolling();
     this.stopAdvicePolling();
