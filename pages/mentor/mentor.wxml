@@ -1,0 +1,52 @@
+<view class="page">
+  <view class="banner">
+    <swiper indicator-dots circular autoplay class="banner-swiper" interval="10000">
+      <swiper-item>
+        <view class="banner-item">
+          <image src="/images/banner1.png" class="banner-img" mode="widthFix"></image>
+        </view>
+      </swiper-item>
+      <swiper-item>
+        <view class="banner-item">
+          <image src="/images/banner2.png" class="banner-img" mode="widthFix"></image>
+        </view>
+      </swiper-item>
+    </swiper>
+  </view>
+
+  <view class="form-card">
+    <view class="form-title">导师1V1助力</view>
+    <view class="mentor-scroll-wrap">
+      <view class="mentor-scroll-box" style="transform: translateX({{mentorOffset}}rpx)">
+        <view class="mentor-item" wx:for="{{mentorList}}" wx:key="_id">
+          <view class="avatar-circle">
+            <image src="{{item.avatar}}" class="avatar-img" mode="aspectFill" lazy-load></image>
+            <view class="glass-info">
+              <text class="mentor-job">{{item.job}}</text>
+              <text class="mentor-company">{{item.company}}</text>
+            </view>
+          </view>
+          <view class="mentor-nick">{{item.nick}}</view>
+        </view>
+      </view>
+    </view>
+
+    <picker mode="selector" range="{{categoryList}}" bindchange="onCategoryChange" value="{{pickerValue}}">
+      <view class="picker-field">
+        <text>{{selectedCategory || '请选择辅导类别'}}</text>
+        <text class="arrow">▼</text>
+      </view>
+    </picker>
+
+    <textarea
+      class="textarea-field"
+      placeholder="说说当前面临的状况，比如求职面试相关问题"
+      value="{{userDesc}}"
+      bindinput="onDescInput"
+    ></textarea>
+
+    <button class="submit-btn" bindtap="submit">🚀 提交诉求 → 对接客服</button>
+  </view>
+
+  <view wx:if="{{showTip}}" class="bottom-tip">{{tipText}}</view>
+</view>

@@ -27,6 +27,30 @@ Page({
     wx.nextTick(() => this.getRandomResumeData());
   },
 
+  onShow() {
+    this.showMentorHotBadge();
+  },
+
+  showMentorHotBadge() {
+    wx.setTabBarBadge({
+      index: 2,
+      text: 'HOT',
+      fail: error => console.warn('真人导师HOT标识展示失败', error)
+    });
+  },
+
+  goToCareerPlanning() {
+    wx.setStorageSync('mentorDefaultType', 'careerPlanning');
+    wx.switchTab({
+      url: '/pages/mentor/mentor',
+      fail: error => {
+        wx.removeStorageSync('mentorDefaultType');
+        console.error('进入真人导师页面失败', error);
+        wx.showToast({ title: '页面打开失败，请稍后重试', icon: 'none' });
+      }
+    });
+  },
+
   onUnload() {
     this.clearOrderPolling();
     this.stopDiagnosisPolling();
