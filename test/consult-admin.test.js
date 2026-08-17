@@ -9,9 +9,9 @@ const root = path.join(__dirname, '..');
 const routeSource = fs.readFileSync(path.join(root, 'routes/consult-admin.js'), 'utf8');
 const indexSource = fs.readFileSync(path.join(root, 'routes/index.js'), 'utf8');
 const appSource = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
-const html = fs.readFileSync(path.join(root, 'web/consult-admin/index.html'), 'utf8');
-const css = fs.readFileSync(path.join(root, 'web/consult-admin/styles.css'), 'utf8');
-const browserSource = fs.readFileSync(path.join(root, 'web/consult-admin/app.js'), 'utf8');
+const html = fs.readFileSync(path.join(root, 'consult-admin-web/index.html'), 'utf8');
+const css = fs.readFileSync(path.join(root, 'consult-admin-web/styles.css'), 'utf8');
+const browserSource = fs.readFileSync(path.join(root, 'consult-admin-web/app.js'), 'utf8');
 const appJson = JSON.parse(fs.readFileSync(path.join(root, 'app.json'), 'utf8'));
 
 test('consult workspace is an independent browser page rather than a mini-program page', () => {

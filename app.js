@@ -9,11 +9,11 @@ const { startInterviewWorker, stopInterviewWorker } = require('./routes/intervie
 
 const app = express();
 app.use(express.json());
-const consultAdminAssets = express.static(path.join(__dirname, 'web/consult-admin'));
+const consultAdminAssets = express.static(path.join(__dirname, 'consult-admin-web'));
 app.use('/consult-admin-assets', consultAdminAssets);
 app.use('/api/consult-admin-assets', consultAdminAssets);
 app.get(['/consult-admin', '/api/consult-admin'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'web/consult-admin/index.html'));
+  res.sendFile(path.join(__dirname, 'consult-admin-web/index.html'));
 });
 
 const APPID = process.env.APPID;
