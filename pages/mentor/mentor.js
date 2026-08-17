@@ -1,8 +1,10 @@
 'use strict';
 
+const CUSTOMER_SERVICE_URL = 'https://work.weixin.qq.com/kfid/kfceaf821d31a2800b3';
+
 Page({
   data: {
-    categoryList: ['求职规划辅导', '模拟面试辅导', '简历手把手优化', '专属定制辅导'],
+    categoryList: ['求职规划辅导', '模拟面试辅导', '简历手把手优化', '岗位专业知识辅导'],
     selectedCategory: '',
     pickerValue: '',
     userDesc: '',
@@ -115,8 +117,6 @@ Page({
     }
 
     const infoText = `【诉求方向】${selectedCategory}\n【当前处境】${userDesc}`;
-    const kfBaseUrl = 'https://work.weixin.qq.com/kfid/kfceaf821d31a2800b3';
-    const finalKfUrl = `${kfBaseUrl}?kf_desc=${encodeURIComponent(infoText)}`;
     const now = new Date();
     const pad = value => String(value).padStart(2, '0');
     const createTime = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
@@ -142,9 +142,9 @@ Page({
 
     wx.openCustomerServiceChat({
       corpId: 'ww639b4917bebfa484',
-      extInfo: { url: finalKfUrl },
+      extInfo: { url: CUSTOMER_SERVICE_URL },
       success: () => console.log('唤起客服成功'),
-      fail: () => console.log('唤起客服失败')
+      fail: error => console.error('唤起客服失败', error)
     });
   }
 });

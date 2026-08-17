@@ -38,3 +38,11 @@ test('the native mentor tab displays HOT without changing the tab bar appearance
     assert.doesNotMatch(source, /getTabBar/);
   }
 });
+
+test('mentor keeps established categories and opens the unmodified customer service entry', () => {
+  assert.match(mentorJs, /'岗位专业知识辅导'/);
+  assert.match(mentorJs, /const CUSTOMER_SERVICE_URL = 'https:\/\/work\.weixin\.qq\.com\/kfid\/kfceaf821d31a2800b3'/);
+  assert.match(mentorJs, /extInfo: \{ url: CUSTOMER_SERVICE_URL \}/);
+  assert.doesNotMatch(mentorJs, /kf_desc|finalKfUrl/);
+  assert.match(mentorJs, /setClipboardData\(\{\s*data: infoText/);
+});
