@@ -2,12 +2,17 @@
 
 const express = require('express');
 const axios = require('axios');
+const path = require('path');
 const { db } = require('./routes/diagnose-db');
 const { startDiagnoseWorker, stopDiagnoseWorker } = require('./routes/diagnose-worker');
 const { startInterviewWorker, stopInterviewWorker } = require('./routes/interview-worker');
 
 const app = express();
 app.use(express.json());
+app.use('/consult-admin-assets', express.static(path.join(__dirname, 'web/consult-admin')));
+app.get('/consult-admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'web/consult-admin/index.html'));
+});
 
 const APPID = process.env.APPID;
 const APPSECRET = process.env.APPSECRET;

@@ -7,7 +7,6 @@
     "pages/webview/webview",
     "pages/advice/advice",
     "pages/mentor/mentor",
-    "pages/mentor/consult-admin",
     "pages/mentor/chat",
     "pages/mine/mine",
     "pages/mine/orderlist/orderlist",

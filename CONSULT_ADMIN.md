@@ -1,43 +1,51 @@
-# 客服工作台
+# 独立客服工作台
 
-## 页面入口
+## 定位与入口
 
-小程序内部页面路径：
+客服工作台是独立的响应式网页，不属于微信小程序页面，也不依赖客服人员的微信或企业微信 OpenID。
 
-```text
-pages/mentor/consult-admin
-```
-
-该页面不会出现在底部 TabBar 中。客服可通过小程序开发版/体验版的指定页面入口访问。
-
-## 管理员配置
-
-后端环境变量 `CONSULT_ADMIN_OPENIDS` 必须配置为允许访问工作台的微信 OpenID；多个 OpenID 使用英文逗号分隔：
+部署后的入口：
 
 ```text
-CONSULT_ADMIN_OPENIDS=openid_a,openid_b
+https://你的服务域名/consult-admin#共享访问密钥
 ```
 
-后端会在每次查询或更新前使用小程序 `wx.login` 生成的临时 code 调用微信 `jscode2session`，并以微信返回的真实 OpenID 校验管理员名单。不要把管理员名单或数据库管理凭据写入小程序前端。
+电脑端使用表格布局，手机 Safari、Chrome 等浏览器自动切换为卡片布局。访问密钥放在 URL 的 `#` 后，不会随 HTTP 请求发送或进入常规服务端访问日志；网页会将其暂存于当前浏览器标签页的 `sessionStorage`，API 请求通过 `Authorization: Bearer ...` 携带。
+
+## 无账号访问与安全边界
+
+工作台不要求工作人员注册账号或登录。为了避免任何知道网址的人读取用户咨询和 OpenID，后端仍要求一个至少 32 位的共享访问密钥：
+
+```text
+CONSULT_ADMIN_TOKEN=请使用密码生成器生成至少32位随机字符串
+```
+
+负责人只需把完整安全链接发给工作人员。打开链接即可使用，无需输入账号密码。链接一旦泄露，应立即轮换 `CONSULT_ADMIN_TOKEN` 并重新部署。
+
+> 不建议把接口做成完全匿名公开访问。`user_consult` 包含用户 OpenID 和具体诉求，公开接口会造成隐私数据泄露。
+
+## 页面能力
+
+- 按“待处理、已处理、全部”筛选；
+- 搜索具体诉求、辅导类别、OpenID、昵称和客服备注；
+- 分页查看咨询记录；
+- 填写客服备注并标记为已处理；
+- 电脑表格和手机卡片响应式布局。
 
 ## 数据库准备
 
-工作台读取现有的 `user_consult` 集合。建议为以下组合创建索引，以支持按状态筛选和按创建时间倒序分页：
+工作台读取现有的 `user_consult` 集合。建议创建联合索引：
 
 ```text
 status ASC, createTime DESC
 ```
 
-“标记已处理”会更新：
-
-- `status`: `processed`
-- `remark`: 客服备注
-- `processedAt`: 服务端处理时间
-- `processedBy`: 执行操作的管理员 OpenID
+“标记已处理”会更新 `status`、`remark`、`processedAt` 和 `processedBy`。
 
 ## 发布检查
 
-1. 确认后端已配置 `APPID`、`APPSECRET` 和 `CONSULT_ADMIN_OPENIDS`。
-2. 确认 `user_consult` 已创建所需索引。
-3. 使用管理员微信账号打开工作台，验证待处理列表、筛选、下拉刷新和标记处理。
-4. 使用普通微信账号访问，确认接口返回“无权访问客服工作台”。
+1. 在后端配置不少于 32 位的 `CONSULT_ADMIN_TOKEN`。
+2. 为 `user_consult` 创建建议索引。
+3. 使用完整安全链接分别在电脑 Chrome 和手机浏览器打开。
+4. 验证筛选、搜索、分页、备注和标记处理。
+5. 不带访问密钥请求 API，确认返回 HTTP 401。
