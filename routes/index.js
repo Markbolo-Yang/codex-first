@@ -6,6 +6,7 @@ var router = express.Router();
 const diagnoseRouter = require('./diagnose');
 const resumeParserRouter = require('./resume-parser');
 const interviewRouter = require('./interview');
+const consultAdminRouter = require('./consult-admin');
 // 云数据库全局初始化
 const cloudbase = require('@cloudbase/node-sdk');
 
@@ -130,6 +131,7 @@ async function initUser(openid) {
 router.use('/diagnose', diagnoseRouter);
 router.use('/resume', resumeParserRouter);
 router.use('/interview', interviewRouter);
+router.use('/admin/consults', consultAdminRouter);
 
 router.get('/', (req, res) => res.render('index', { title: 'Express' }));
 // ========== 用户配额 ==========
