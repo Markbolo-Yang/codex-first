@@ -16,8 +16,11 @@ const appJson = JSON.parse(fs.readFileSync(path.join(root, 'app.json'), 'utf8'))
 
 test('consult workspace is an independent browser page rather than a mini-program page', () => {
   assert.doesNotMatch(appJson.pages.join('\n'), /consult-admin/);
-  assert.match(appSource, /app\.get\('\/consult-admin'/);
+  assert.match(appSource, /app\.get\(\['\/consult-admin', '\/api\/consult-admin'\]/);
   assert.match(appSource, /consult-admin-assets/);
+  assert.match(appSource, /\/api\/consult-admin-assets/);
+  assert.match(html, /href="\.\/consult-admin-assets\/styles\.css"/);
+  assert.match(html, /src="\.\/consult-admin-assets\/app\.js"/);
   assert.match(html, /<table>/);
   assert.match(html, /id="mobileCards"/);
   assert.match(css, /@media \(max-width: 720px\)/);

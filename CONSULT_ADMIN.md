@@ -10,6 +10,14 @@
 https://api.youwantoffer.cn/consult-admin#你的CONSULT_ADMIN_TOKEN
 ```
 
+如果部署平台只转发 `/api/*` 路径，也可以使用兼容入口：
+
+```text
+https://api.youwantoffer.cn/api/consult-admin#你的CONSULT_ADMIN_TOKEN
+```
+
+出现 `Cannot GET /consult-admin` 表示线上正在运行的 Node 版本没有注册该页面路由，或者最新代码尚未重新构建并发布；这与访问密钥是否正确无关。设置环境变量后仍必须重新部署包含 `app.js` 和 `web/consult-admin/` 的完整后端版本。
+
 电脑端使用表格布局，手机 Safari、Chrome 等浏览器自动切换为卡片布局。访问密钥放在 URL 的 `#` 后，不会随 HTTP 请求发送或进入常规服务端访问日志；网页会将其暂存于当前浏览器标签页的 `sessionStorage`，API 请求通过 `Authorization: Bearer ...` 携带。
 
 ## 无账号访问与安全边界
@@ -39,6 +47,8 @@ https://api.youwantoffer.cn/consult-admin#0123...abcd
 ```
 
 示例值仅用于说明，不能直接作为生产密钥，也不要把真实密钥提交到 Git 仓库。
+
+如果真实密钥曾出现在截图、聊天记录或公开工单中，请立即重新生成并替换环境变量，然后重新部署。旧密钥不应继续使用。
 
 负责人只需把完整安全链接发给工作人员。打开链接即可使用，无需输入账号密码。链接一旦泄露，应立即轮换 `CONSULT_ADMIN_TOKEN` 并重新部署。
 
