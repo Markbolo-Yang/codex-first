@@ -81,6 +81,7 @@ Page({
   },
 
   startScroll() {
+    this.stopMentorScroll();
     const itemWidth = 120;
     const length = this.data.mentorList.length;
     if (length === 0) return;
@@ -134,7 +135,7 @@ Page({
 
     wx.setClipboardData({
       data: infoText,
-      success() { wx.hideToast(); }
+      showToast: false
     });
 
     this.setData({ showTip: true, tipText: '诉求已复制，可一键粘贴发送' });

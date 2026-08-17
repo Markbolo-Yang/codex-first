@@ -46,3 +46,9 @@ test('mentor keeps established categories and opens the unmodified customer serv
   assert.doesNotMatch(mentorJs, /kf_desc|finalKfUrl/);
   assert.match(mentorJs, /setClipboardData\(\{\s*data: infoText/);
 });
+
+test('mentor scrolling replaces an existing timer and clipboard uses only the page tip', () => {
+  assert.match(mentorJs, /startScroll\(\) \{\s*this\.stopMentorScroll\(\);/);
+  assert.match(mentorJs, /setClipboardData\(\{\s*data: infoText,\s*showToast: false\s*\}\)/);
+  assert.doesNotMatch(mentorJs, /wx\.hideToast\(\)/);
+});
