@@ -4,10 +4,10 @@
 
 客服工作台是独立的响应式网页，不属于微信小程序页面，也不依赖客服人员的微信或企业微信 OpenID。
 
-部署后的入口：
+如果当前 Node 服务仍部署在 `api.youwantoffer.cn`，发布本次代码后的入口为：
 
 ```text
-https://你的服务域名/consult-admin#共享访问密钥
+https://api.youwantoffer.cn/consult-admin#你的CONSULT_ADMIN_TOKEN
 ```
 
 电脑端使用表格布局，手机 Safari、Chrome 等浏览器自动切换为卡片布局。访问密钥放在 URL 的 `#` 后，不会随 HTTP 请求发送或进入常规服务端访问日志；网页会将其暂存于当前浏览器标签页的 `sessionStorage`，API 请求通过 `Authorization: Bearer ...` 携带。
@@ -19,6 +19,26 @@ https://你的服务域名/consult-admin#共享访问密钥
 ```text
 CONSULT_ADMIN_TOKEN=请使用密码生成器生成至少32位随机字符串
 ```
+
+可以在本地终端生成密钥：
+
+```bash
+openssl rand -hex 32
+```
+
+例如命令输出 `0123...abcd` 后，需要在部署平台的后端环境变量中配置：
+
+```text
+CONSULT_ADMIN_TOKEN=0123...abcd
+```
+
+工作人员实际打开的完整链接则是：
+
+```text
+https://api.youwantoffer.cn/consult-admin#0123...abcd
+```
+
+示例值仅用于说明，不能直接作为生产密钥，也不要把真实密钥提交到 Git 仓库。
 
 负责人只需把完整安全链接发给工作人员。打开链接即可使用，无需输入账号密码。链接一旦泄露，应立即轮换 `CONSULT_ADMIN_TOKEN` 并重新部署。
 
