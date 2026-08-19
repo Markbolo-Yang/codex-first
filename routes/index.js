@@ -393,11 +393,42 @@ router.post('/queryPayOrder', async (req, res) => {
 // ========== 订单列表 ==========
 router.post('/getUserOrderList', async (req, res) => {
   try {
-    const listRes = await withTimeout(db.collection('orders').orderBy('create_time', 'desc').limit(100).get());
+    const { openId } = req.body;
+    const page = Math.max(1, Number.parseInt(req.body.page, 10) || 1);
+    const pageSize = Math.min(100, Math.max(1, Number.parseInt(req.body.pageSize, 10) || 20));
 
-    console.log('【订单列表查询】拉取全部订单总数：', listRes.data.length);
+    if (!openId || typeof openId !== 'string') {
+      return res.json({ code: -1, msg: '缺少openId参数' });
+    }
 
-    return res.json({ code: 0, data: { list: listRes.data, total: listRes.data.length } });
+    const normalizedOpenId = openId.trim();
+    if (!normalizedOpenId || normalizedOpenId === 'undefined') {
+      return res.json({ code: -1, msg: 'openId参数无效' });
+    }
+
+    const orderQuery = { 'data.openid': normalizedOpenId };
+    const [listRes, countRes] = await withTimeout(Promise.all([
+      db.collection('orders')
+        .where(orderQuery)
+        .orderBy('data.out_trade_no', 'desc')
+        .skip((page - 1) * pageSize)
+        .limit(pageSize)
+        .get(),
+      db.collection('orders').where(orderQuery).count()
+    ]));
+
+    console.log('【订单列表查询】用户', normalizedOpenId, '第', page, '页，返回：', listRes.data.length, '总数：', countRes.total);
+
+    return res.json({
+      code: 0,
+      data: {
+        list: listRes.data,
+        total: countRes.total,
+        page,
+        pageSize,
+        hasMore: page * pageSize < countRes.total
+      }
+    });
 
   } catch (err) {
     console.error('【订单列表查询异常】', err);
