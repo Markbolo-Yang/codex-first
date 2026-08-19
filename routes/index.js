@@ -7,6 +7,7 @@ const diagnoseRouter = require('./diagnose');
 const resumeParserRouter = require('./resume-parser');
 const interviewRouter = require('./interview');
 const consultAdminRouter = require('./consult-admin');
+const { resolvePaymentPricing } = require('./payment-pricing');
 // 云数据库全局初始化
 const cloudbase = require('@cloudbase/node-sdk');
 
@@ -412,6 +413,9 @@ router.post('/createWxPayOrder', async (req, res) => {
     const { openId, type } = req.body;
 
     if (!openId || !type) return res.json({ errcode: -1, errmsg: '参数缺失' });
+    if (!['resume', 'interview'].includes(type)) {
+      return res.json({ errcode: -1, errmsg: '不支持的订单类型' });
+    }
 
     const appid = process.env.APP_ID;
     const mchid = process.env.WX_MCH_ID;
@@ -419,11 +423,16 @@ router.post('/createWxPayOrder', async (req, res) => {
     const v3Key = process.env.WX_API_V3_KEY;
     const notifyUrl = 'https://api.youwantoffer.cn/api/wxpayNotify';
     if (!appid || !mchid || !serialNo || !PRIVATE_KEY_RAW) return res.json({ errcode: -2, errmsg: '商户配置缺失' });
+    const pricing = await withTimeout(
+      resolvePaymentPricing(db, openId),
+      3000,
+      '内部测试白名单查询超时'
+    );
     const outTradeNo = genOutTradeNo();
     const description = type === 'resume' ? '简历诊断' : '面试建议';
     const bodyObj = {
       appid, mchid, out_trade_no: outTradeNo, description, notify_url: notifyUrl,
-      amount: { total: 1, currency: 'CNY' }, payer: { openid: openId }
+      amount: { total: pricing.totalFee, currency: 'CNY' }, payer: { openid: openId }
     };
     const timestamp = Math.floor(Date.now() / 1000).toString();
     const nonce = crypto.randomBytes(16).toString('hex');
@@ -441,7 +450,8 @@ router.post('/createWxPayOrder', async (req, res) => {
     const paySignRaw = `${appid}\n${timestamp}\n${nonce}\n${payPackage}\n`;
     const paySign = crypto.createSign('RSA-SHA256').update(paySignRaw, 'utf8').sign(PRIVATE_KEY_RAW, 'base64');
     await db.collection('orders').add({ data: {
-      openid: openId, type, goods_name: description, total_fee: 1, out_trade_no: outTradeNo,
+      openid: openId, type, goods_name: description, total_fee: pricing.totalFee, out_trade_no: outTradeNo,
+      is_internal_test: pricing.isInternalTest, pricing_tier: pricing.pricingTier,
       prepay_id: wxResult.prepay_id, trade_state: 'NOTPAY', benefit_granted: 0,
       create_time: new Date().toLocaleString('zh-CN').replace(/\//g, '-')
     } });
