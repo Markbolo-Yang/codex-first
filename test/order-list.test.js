@@ -8,6 +8,7 @@ const test = require('node:test');
 const routeSource = fs.readFileSync(path.join(__dirname, '../routes/index.js'), 'utf8');
 const pageSource = fs.readFileSync(path.join(__dirname, '../pages/mine/orderlist/orderlist.js'), 'utf8');
 const templateSource = fs.readFileSync(path.join(__dirname, '../pages/mine/orderlist/orderlist.wxml'), 'utf8');
+const styleSource = fs.readFileSync(path.join(__dirname, '../pages/mine/orderlist/orderlist.wxss'), 'utf8');
 
 test('order list API filters by user and paginates newest orders', () => {
   const handler = routeSource.slice(
@@ -30,4 +31,7 @@ test('mini-program order list refreshes and loads subsequent pages', () => {
   assert.match(pageSource, /Boolean\(result\.data\.hasMore\)/);
   assert.match(templateSource, /bindscrolltolower="onOrderListLower"/);
   assert.match(templateSource, /\{\{item\.statusText\}\}/);
+  assert.match(styleSource, /\.list-tip\s*\{[\s\S]*text-align: center;/);
+  assert.match(styleSource, /font-size: 22rpx;/);
+  assert.match(styleSource, /color: #c6c9cf;/);
 });
