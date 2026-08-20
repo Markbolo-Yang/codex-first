@@ -23,8 +23,27 @@ Page({
   },
 
   onLoad() {
+    this.enablePageSharing();
     this.setData({ resumeList: [] });
     wx.nextTick(() => this.getRandomResumeData());
+  },
+
+  enablePageSharing() {
+    wx.showShareMenu({
+      menus: ['shareAppMessage', 'shareTimeline'],
+      fail: error => console.warn('简历诊断页分享菜单开启失败', error)
+    });
+  },
+
+  onShareAppMessage() {
+    return {
+      title: '留畅拿offer｜大厂简历诊断',
+      path: '/pages/resume/resume'
+    };
+  },
+
+  onShareTimeline() {
+    return { title: '留畅拿offer｜大厂简历诊断' };
   },
 
   onShow() {

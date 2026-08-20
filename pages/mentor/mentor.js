@@ -24,6 +24,28 @@ Page({
     return newArr;
   },
 
+  onLoad() {
+    this.enablePageSharing();
+  },
+
+  enablePageSharing() {
+    wx.showShareMenu({
+      menus: ['shareAppMessage', 'shareTimeline'],
+      fail: error => console.warn('真人导师页分享菜单开启失败', error)
+    });
+  },
+
+  onShareAppMessage() {
+    return {
+      title: '留畅拿offer｜真人导师1V1助力',
+      path: '/pages/mentor/mentor'
+    };
+  },
+
+  onShareTimeline() {
+    return { title: '留畅拿offer｜真人导师1V1助力' };
+  },
+
   onShow() {
     const app = getApp();
     this.showMentorHotBadge();
