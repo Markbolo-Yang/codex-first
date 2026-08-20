@@ -54,7 +54,7 @@ Page({
     wx.setTabBarBadge({
       index: 2,
       text: 'HOT',
-      fail: error => console.warn('真人导师HOT标识展示失败', error)
+      fail: error => console.warn('导师HOT标识展示失败', error)
     });
   },
 
@@ -205,8 +205,8 @@ Page({
     if (resumeFreeLeft > 0 || payResumeCount > 0) return true;
 
     wx.showModal({
-      title: '啊哈～免费诊断次数用完啦',
-      content: '本次诊断仅付0.01元',
+      title: '啊哈～免费的诊断次数用完啦',
+      content: '本次诊断仅付4.99元',
       confirmText: '去支付',
       cancelText: '取消',
       success: async result => {
@@ -294,7 +294,7 @@ Page({
 
   uploadResume() {
     if (this.data.isPolling) {
-      wx.showToast({ title: '正在整理订单，请稍候', icon: 'none' });
+      wx.showToast({ title: '正在整理中', icon: 'none' });
       return;
     }
     const count = wx.getStorageSync('tip') || 0;
