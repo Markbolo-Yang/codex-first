@@ -17,7 +17,28 @@ Page({
     loadingText: '基于大厂选拔思维，生成面经中...'
   },
 
-  onLoad() { this.getArticleList(); },
+  onLoad() {
+    this.enablePageSharing();
+    this.getArticleList();
+  },
+
+  enablePageSharing() {
+    wx.showShareMenu({
+      menus: ['shareAppMessage', 'shareTimeline'],
+      fail: error => console.warn('面试辅导页分享菜单开启失败', error)
+    });
+  },
+
+  onShareAppMessage() {
+    return {
+      title: '留畅拿offer｜大厂面试辅导',
+      path: '/pages/interview/interview'
+    };
+  },
+
+  onShareTimeline() {
+    return { title: '留畅拿offer｜大厂面试辅导' };
+  },
 
   onUnload() {
     this.clearOrderPolling();
