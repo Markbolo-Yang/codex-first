@@ -1,5 +1,5 @@
 <view class="container">
-  <view class="banner">
+  <view class="banner" bindtap="goToCareerPlanning" hover-class="banner--pressed" hover-stay-time="100">
     <image src="/images/interview-banner.png" class="banner-img"></image>
     <view class="banner-overlay"></view>
     <view class="banner-content">

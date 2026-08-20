@@ -1,0 +1,81 @@
+# 独立客服工作台
+
+## 定位与入口
+
+客服工作台是独立的响应式网页，不属于微信小程序页面，也不依赖客服人员的微信或企业微信 OpenID。
+
+如果当前 Node 服务仍部署在 `api.youwantoffer.cn`，发布本次代码后的入口为：
+
+```text
+https://api.youwantoffer.cn/consult-admin#你的CONSULT_ADMIN_TOKEN
+```
+
+如果部署平台只转发 `/api/*` 路径，也可以使用兼容入口：
+
+```text
+https://api.youwantoffer.cn/api/consult-admin#你的CONSULT_ADMIN_TOKEN
+```
+
+出现 `Cannot GET /consult-admin` 表示线上正在运行的 Node 版本没有注册该页面路由，或者最新代码尚未重新构建并发布；这与访问密钥是否正确无关。设置环境变量后仍必须重新部署包含 `app.js` 和 `web/consult-admin/` 的完整后端版本。
+
+电脑端使用表格布局，手机 Safari、Chrome 等浏览器自动切换为卡片布局。访问密钥放在 URL 的 `#` 后，不会随 HTTP 请求发送或进入常规服务端访问日志；网页会将其暂存于当前浏览器标签页的 `sessionStorage`，API 请求通过 `Authorization: Bearer ...` 携带。
+
+## 无账号访问与安全边界
+
+工作台不要求工作人员注册账号或登录。为了避免任何知道网址的人读取用户咨询和 OpenID，后端仍要求一个至少 32 位的共享访问密钥：
+
+```text
+CONSULT_ADMIN_TOKEN=请使用密码生成器生成至少32位随机字符串
+```
+
+可以在本地终端生成密钥：
+
+```bash
+openssl rand -hex 32
+```
+
+例如命令输出 `0123...abcd` 后，需要在部署平台的后端环境变量中配置：
+
+```text
+CONSULT_ADMIN_TOKEN=0123...abcd
+```
+
+工作人员实际打开的完整链接则是：
+
+```text
+https://api.youwantoffer.cn/consult-admin#0123...abcd
+```
+
+示例值仅用于说明，不能直接作为生产密钥，也不要把真实密钥提交到 Git 仓库。
+
+如果真实密钥曾出现在截图、聊天记录或公开工单中，请立即重新生成并替换环境变量，然后重新部署。旧密钥不应继续使用。
+
+负责人只需把完整安全链接发给工作人员。打开链接即可使用，无需输入账号密码。链接一旦泄露，应立即轮换 `CONSULT_ADMIN_TOKEN` 并重新部署。
+
+> 不建议把接口做成完全匿名公开访问。`user_consult` 包含用户 OpenID 和具体诉求，公开接口会造成隐私数据泄露。
+
+## 页面能力
+
+- 按“待处理、已处理、全部”筛选；
+- 搜索具体诉求、辅导类别、OpenID、昵称和客服备注；
+- 分页查看咨询记录；
+- 填写客服备注并标记为已处理；
+- 电脑表格和手机卡片响应式布局。
+
+## 数据库准备
+
+工作台读取现有的 `user_consult` 集合。建议创建联合索引：
+
+```text
+status ASC, createTime DESC
+```
+
+“标记已处理”会更新 `status`、`remark`、`processedAt` 和 `processedBy`。
+
+## 发布检查
+
+1. 在后端配置不少于 32 位的 `CONSULT_ADMIN_TOKEN`。
+2. 为 `user_consult` 创建建议索引。
+3. 使用完整安全链接分别在电脑 Chrome 和手机浏览器打开。
+4. 验证筛选、搜索、分页、备注和标记处理。
+5. 不带访问密钥请求 API，确认返回 HTTP 401。
