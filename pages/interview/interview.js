@@ -92,8 +92,8 @@ Page({
   startPay(openId) {
     return new Promise(resolve => {
       wx.showModal({
-        title: '啊哈～免费面试建议次数用完啦',
-        content: '本次建议生成仅0.01元',
+        title: '啊哈～免费的建议次数用完啦',
+        content: '本次辅导仅4.99元',
         confirmText: '去支付',
         cancelText: '取消',
         success: result => result.confirm ? this.doPay(openId, resolve) : resolve(false)
@@ -119,7 +119,7 @@ Page({
   },
 
   startOrderPolling(outTradeNo, resolve) {
-    wx.showLoading({ title: '正在整理订单' });
+    wx.showLoading({ title: '正在整理中' });
     this.pollCount = 0;
     this.setData({ isPolling: true });
     this._orderPollTimer = setInterval(async () => {
@@ -133,7 +133,7 @@ Page({
       } else if (this.pollCount >= 5) {
         this.clearOrderPolling();
         wx.hideLoading();
-        wx.showToast({ title: '同步超时，请稍后查看', icon: 'none' });
+        wx.showToast({ title: '意外超时，请稍后查看', icon: 'none' });
         resolve(false);
       }
     }, 2500);
@@ -215,7 +215,7 @@ Page({
       this.startAdvicePolling();
     } catch (error) {
       this.finishLoading();
-      this.showFailure(error.message || '面试建议生成失败，请稍后重试');
+      this.showFailure(error.message || '面试建议生成失败，请重试');
     }
   },
 
