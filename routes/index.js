@@ -118,12 +118,17 @@ async function initUser(openid) {
 
     }
 
-    await withTimeout(userColl.doc(userRes.data[0]._id).update({
+    const existingUser = userRes.data[0];
+    const userPatch = {
       lastLoginAt: now,
       lastLoginStr: nowStr
-    }));
+    };
+    if (existingUser.payResumeCount == null) userPatch.payResumeCount = 0;
+    if (existingUser.payInterviewCount == null) userPatch.payInterviewCount = 0;
 
-    return userRes.data[0];
+    await withTimeout(userColl.doc(existingUser._id).update(userPatch));
+
+    return { ...existingUser, ...userPatch };
 
   });
 
