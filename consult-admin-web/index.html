@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>用户咨询工作台</title>
+  <link rel="stylesheet" href="./consult-admin-assets/styles.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="page-header">
+      <div>
+        <p class="eyebrow">CUSTOMER SERVICE</p>
+        <h1>用户咨询工作台</h1>
+        <p class="description">查看用户诉求、补充客服备注并更新处理状态</p>
+      </div>
+      <button id="refreshButton" class="button button-secondary" type="button">刷新数据</button>
+    </header>
+
+    <section id="accessPanel" class="access-panel" hidden>
+      <h2>需要工作台访问密钥</h2>
+      <p>请使用负责人提供的完整安全链接，或在下方输入共享密钥。</p>
+      <form id="accessForm">
+        <input id="tokenInput" type="password" minlength="32" autocomplete="current-password" placeholder="输入访问密钥" required>
+        <button class="button button-primary" type="submit">进入工作台</button>
+      </form>
+    </section>
+
+    <section id="workspace" hidden>
+      <div class="filter-bar">
+        <label class="search-field">
+          <span>搜索</span>
+          <input id="searchInput" type="search" placeholder="诉求、类别、OpenID 或备注">
+        </label>
+        <label>
+          <span>处理状态</span>
+          <select id="statusSelect">
+            <option value="pending">待处理</option>
+            <option value="processed">已处理</option>
+            <option value="all">全部</option>
+          </select>
+        </label>
+      </div>
+
+      <div id="message" class="message" hidden></div>
+      <div id="loading" class="loading" hidden>正在读取咨询记录…</div>
+      <div id="empty" class="empty" hidden>没有找到符合条件的咨询记录</div>
+
+      <div id="desktopTable" class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>提交时间</th>
+              <th>辅导类别</th>
+              <th>具体诉求</th>
+              <th>用户 OpenID</th>
+              <th>状态</th>
+              <th>客服备注</th>
+              <th class="action-column">操作</th>
+            </tr>
+          </thead>
+          <tbody id="consultTableBody"></tbody>
+        </table>
+      </div>
+      <div id="mobileCards" class="mobile-cards"></div>
+
+      <nav class="pagination" aria-label="列表分页">
+        <button id="previousButton" class="button button-secondary" type="button">上一页</button>
+        <span id="pageLabel">第 1 页</span>
+        <button id="nextButton" class="button button-secondary" type="button">下一页</button>
+      </nav>
+    </section>
+  </main>
+
+  <dialog id="processDialog">
+    <form id="processForm" method="dialog">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">PROCESS CONSULT</p>
+          <h2>标记为已处理</h2>
+        </div>
+        <button id="closeDialogButton" class="icon-button" type="button" aria-label="关闭">×</button>
+      </div>
+      <p id="dialogSummary" class="dialog-summary"></p>
+      <label>
+        <span>客服备注</span>
+        <textarea id="remarkInput" maxlength="500" placeholder="例如：已通过企业微信回复，已安排导师跟进"></textarea>
+      </label>
+      <div class="dialog-actions">
+        <button id="cancelButton" class="button button-secondary" type="button">取消</button>
+        <button id="confirmButton" class="button button-primary" type="submit">确认处理</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="./consult-admin-assets/app.js" defer></script>
+</body>
+</html>

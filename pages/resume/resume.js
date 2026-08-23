@@ -23,8 +23,51 @@ Page({
   },
 
   onLoad() {
+    this.enablePageSharing();
     this.setData({ resumeList: [] });
     wx.nextTick(() => this.getRandomResumeData());
+  },
+
+  enablePageSharing() {
+    wx.showShareMenu({
+      menus: ['shareAppMessage', 'shareTimeline'],
+      fail: error => console.warn('简历诊断页分享菜单开启失败', error)
+    });
+  },
+
+  onShareAppMessage() {
+    return {
+      title: '留畅拿offer｜大厂简历诊断',
+      path: '/pages/resume/resume'
+    };
+  },
+
+  onShareTimeline() {
+    return { title: '留畅拿offer｜大厂简历诊断' };
+  },
+
+  onShow() {
+    this.showMentorHotBadge();
+  },
+
+  showMentorHotBadge() {
+    wx.setTabBarBadge({
+      index: 2,
+      text: 'HOT',
+      fail: error => console.warn('导师HOT标识展示失败', error)
+    });
+  },
+
+  goToCareerPlanning() {
+    wx.setStorageSync('mentorDefaultType', 'careerPlanning');
+    wx.switchTab({
+      url: '/pages/mentor/mentor',
+      fail: error => {
+        wx.removeStorageSync('mentorDefaultType');
+        console.error('进入真人导师页面失败', error);
+        wx.showToast({ title: '页面打开失败，请稍后重试', icon: 'none' });
+      }
+    });
   },
 
   onUnload() {
@@ -162,8 +205,8 @@ Page({
     if (resumeFreeLeft > 0 || payResumeCount > 0) return true;
 
     wx.showModal({
-      title: '啊哈～免费诊断次数用完啦',
-      content: '本次诊断仅付0.01元',
+      title: '啊哈～免费的诊断次数用完啦',
+      content: '本次诊断仅付4.99元',
       confirmText: '去支付',
       cancelText: '取消',
       success: async result => {
@@ -251,7 +294,7 @@ Page({
 
   uploadResume() {
     if (this.data.isPolling) {
-      wx.showToast({ title: '正在整理订单，请稍候', icon: 'none' });
+      wx.showToast({ title: '正在整理中', icon: 'none' });
       return;
     }
     const count = wx.getStorageSync('tip') || 0;

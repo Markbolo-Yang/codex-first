@@ -6,6 +6,8 @@ var router = express.Router();
 const diagnoseRouter = require('./diagnose');
 const resumeParserRouter = require('./resume-parser');
 const interviewRouter = require('./interview');
+const consultAdminRouter = require('./consult-admin');
+const { resolvePaymentPricing } = require('./payment-pricing');
 // 云数据库全局初始化
 const cloudbase = require('@cloudbase/node-sdk');
 
@@ -116,12 +118,17 @@ async function initUser(openid) {
 
     }
 
-    await withTimeout(userColl.doc(userRes.data[0]._id).update({
+    const existingUser = userRes.data[0];
+    const userPatch = {
       lastLoginAt: now,
       lastLoginStr: nowStr
-    }));
+    };
+    if (existingUser.payResumeCount == null) userPatch.payResumeCount = 0;
+    if (existingUser.payInterviewCount == null) userPatch.payInterviewCount = 0;
 
-    return userRes.data[0];
+    await withTimeout(userColl.doc(existingUser._id).update(userPatch));
+
+    return { ...existingUser, ...userPatch };
 
   });
 
@@ -130,6 +137,7 @@ async function initUser(openid) {
 router.use('/diagnose', diagnoseRouter);
 router.use('/resume', resumeParserRouter);
 router.use('/interview', interviewRouter);
+router.use('/admin/consults', consultAdminRouter);
 
 router.get('/', (req, res) => res.render('index', { title: 'Express' }));
 // ========== 用户配额 ==========
@@ -390,11 +398,42 @@ router.post('/queryPayOrder', async (req, res) => {
 // ========== 订单列表 ==========
 router.post('/getUserOrderList', async (req, res) => {
   try {
-    const listRes = await withTimeout(db.collection('orders').orderBy('create_time', 'desc').limit(100).get());
+    const { openId } = req.body;
+    const page = Math.max(1, Number.parseInt(req.body.page, 10) || 1);
+    const pageSize = Math.min(100, Math.max(1, Number.parseInt(req.body.pageSize, 10) || 20));
 
-    console.log('【订单列表查询】拉取全部订单总数：', listRes.data.length);
+    if (!openId || typeof openId !== 'string') {
+      return res.json({ code: -1, msg: '缺少openId参数' });
+    }
 
-    return res.json({ code: 0, data: { list: listRes.data, total: listRes.data.length } });
+    const normalizedOpenId = openId.trim();
+    if (!normalizedOpenId || normalizedOpenId === 'undefined') {
+      return res.json({ code: -1, msg: 'openId参数无效' });
+    }
+
+    const orderQuery = { 'data.openid': normalizedOpenId };
+    const [listRes, countRes] = await withTimeout(Promise.all([
+      db.collection('orders')
+        .where(orderQuery)
+        .orderBy('data.out_trade_no', 'desc')
+        .skip((page - 1) * pageSize)
+        .limit(pageSize)
+        .get(),
+      db.collection('orders').where(orderQuery).count()
+    ]));
+
+    console.log('【订单列表查询】用户', normalizedOpenId, '第', page, '页，返回：', listRes.data.length, '总数：', countRes.total);
+
+    return res.json({
+      code: 0,
+      data: {
+        list: listRes.data,
+        total: countRes.total,
+        page,
+        pageSize,
+        hasMore: page * pageSize < countRes.total
+      }
+    });
 
   } catch (err) {
     console.error('【订单列表查询异常】', err);
@@ -410,6 +449,9 @@ router.post('/createWxPayOrder', async (req, res) => {
     const { openId, type } = req.body;
 
     if (!openId || !type) return res.json({ errcode: -1, errmsg: '参数缺失' });
+    if (!['resume', 'interview'].includes(type)) {
+      return res.json({ errcode: -1, errmsg: '不支持的订单类型' });
+    }
 
     const appid = process.env.APP_ID;
     const mchid = process.env.WX_MCH_ID;
@@ -417,11 +459,16 @@ router.post('/createWxPayOrder', async (req, res) => {
     const v3Key = process.env.WX_API_V3_KEY;
     const notifyUrl = 'https://api.youwantoffer.cn/api/wxpayNotify';
     if (!appid || !mchid || !serialNo || !PRIVATE_KEY_RAW) return res.json({ errcode: -2, errmsg: '商户配置缺失' });
+    const pricing = await withTimeout(
+      resolvePaymentPricing(db, openId),
+      3000,
+      '内部测试白名单查询超时'
+    );
     const outTradeNo = genOutTradeNo();
     const description = type === 'resume' ? '简历诊断' : '面试建议';
     const bodyObj = {
       appid, mchid, out_trade_no: outTradeNo, description, notify_url: notifyUrl,
-      amount: { total: 1, currency: 'CNY' }, payer: { openid: openId }
+      amount: { total: pricing.totalFee, currency: 'CNY' }, payer: { openid: openId }
     };
     const timestamp = Math.floor(Date.now() / 1000).toString();
     const nonce = crypto.randomBytes(16).toString('hex');
@@ -439,7 +486,8 @@ router.post('/createWxPayOrder', async (req, res) => {
     const paySignRaw = `${appid}\n${timestamp}\n${nonce}\n${payPackage}\n`;
     const paySign = crypto.createSign('RSA-SHA256').update(paySignRaw, 'utf8').sign(PRIVATE_KEY_RAW, 'base64');
     await db.collection('orders').add({ data: {
-      openid: openId, type, goods_name: description, total_fee: 1, out_trade_no: outTradeNo,
+      openid: openId, type, goods_name: description, total_fee: pricing.totalFee, out_trade_no: outTradeNo,
+      is_internal_test: pricing.isInternalTest, pricing_tier: pricing.pricingTier,
       prepay_id: wxResult.prepay_id, trade_state: 'NOTPAY', benefit_granted: 0,
       create_time: new Date().toLocaleString('zh-CN').replace(/\//g, '-')
     } });
